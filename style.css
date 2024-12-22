@@ -1,0 +1,406 @@
+/********************************************************************
+ * style.css
+ * Defines all styling for your robust, feature-rich help editor.
+ * Includes pinned sidebar, overlays, context menus, dark/light theme,
+ * syntax highlighting support, etc.
+ ********************************************************************/
+
+/* Base Reset / Body */
+body {
+  margin: 0;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Scrollbar Styling for Modern Look */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+  border: 2px solid #2d2d2d; /* space around thumb */
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #007acc;
+}
+
+/* Top Toolbar */
+#top-toolbar {
+  display: flex;
+  align-items: center;
+  background-color: #2d2d2d;
+  padding: 8px;
+  gap: 8px;
+}
+#top-toolbar button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+#top-toolbar img {
+  width: 24px;
+  height: 24px;
+}
+#top-toolbar button:hover {
+  background-color: #007acc;
+  border-radius: 4px;
+}
+.divider {
+  width: 1px;
+  background-color: #444;
+  height: 24px;
+  margin: 0 8px;
+}
+
+/* Advanced Features */
+#advanced-features {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#advanced-features button {
+  background-color: #444;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#advanced-features button:hover {
+  background-color: #007acc;
+}
+#advanced-features img {
+  width: 20px;
+  height: 20px;
+}
+.auto-save-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #444;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#chk-auto-save {
+  transform: scale(1.2);
+}
+
+/* Theme Toggle */
+.toggle-theme-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  margin-right: 8px;
+  color: #ccc;
+}
+.toggle-theme-label input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+/* Main Layout Container */
+#main-split-container {
+  display: flex;
+  height: calc(100vh - 50px);
+  width: 100%;
+  overflow: hidden;
+}
+#main-split-container.pinned #vertical-splitter {
+  display: none;
+}
+
+/* Sidebar */
+#sidebar-container {
+  background-color: #252526;
+  border-right: 1px solid #333;
+  min-width: 150px;
+  overflow-y: auto;
+}
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px;
+}
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+#btn-add-section {
+  background-color: #007acc;
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+#btn-add-section:hover {
+  opacity: 0.8;
+}
+#sections-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.section-item {
+  padding: 6px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-item.active {
+  background-color: #007acc;
+}
+.section-item button {
+  background: #444;
+  color: #fff;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.section-item button:hover {
+  background-color: #007acc;
+}
+
+/* Vertical Splitter */
+#vertical-splitter {
+  width: 4px;
+  background: #444;
+  cursor: col-resize;
+}
+
+/* Editor + Preview Split Container */
+#editor-preview-split {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Editor Panel */
+#editor-panel {
+  background-color: #1e1e1e;
+  border-right: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 50%;
+  padding: 8px;
+}
+.search-replace-container {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.search-replace-container input {
+  flex: 1;
+  background: #333;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.search-replace-container button {
+  background-color: #007acc;
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.search-replace-container button:hover {
+  background-color: #005fa3;
+}
+#markdown-editor {
+  flex: 1;
+  width: 100%;
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+  outline: none;
+  color: #fff;
+  resize: none;
+  font-family: Consolas, "Courier New", monospace;
+  padding: 8px;
+  border-radius: 4px;
+  overflow: auto;
+}
+
+/* Preview Panel */
+#preview-panel {
+  flex: 1;
+  background-color: #1e1e1e;
+  overflow: auto;
+  padding: 8px;
+}
+#preview-content {
+  background-color: #252526;
+  color: #d4d4d4;
+  padding: 16px;
+  min-height: 100%;
+  height: 100%;
+  border-radius: 4px;
+}
+
+/* highlight for search */
+.highlight {
+  background-color: #f8e71c;
+  color: #000;
+  font-weight: bold;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Light Theme Overrides */
+body.light-theme {
+  background-color: #ffffff;
+  color: #000000;
+}
+body.light-theme #sidebar-container {
+  background-color: #f0f0f0;
+  color: #000000;
+}
+body.light-theme #preview-content {
+  background-color: #ffffff;
+  color: #000000;
+}
+body.light-theme #markdown-editor {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ccc;
+}
+
+/* Context Menu */
+.context-menu {
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #666;
+  min-width: 120px;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.context-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.context-menu-item:hover {
+  background-color: #007acc;
+}
+
+/* Rename Overlay */
+#rename-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+#rename-overlay-content {
+  background: #2d2d2d;
+  padding: 20px;
+  border: 1px solid #444;
+  width: 300px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 8px;
+}
+#rename-overlay-content h2 {
+  margin: 0;
+  font-size: 18px;
+}
+#rename-input {
+  background: #333;
+  border: 1px solid #444;
+  padding: 6px;
+  color: #fff;
+  width: 100%;
+  border-radius: 4px;
+}
+#rename-overlay-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+#rename-overlay-buttons button {
+  background-color: #007acc;
+  border: none;
+  color: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#rename-overlay-buttons button:hover {
+  opacity: 0.8;
+}
+
+/* Recent Files Overlay */
+#recent-files-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+#recent-files-content {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  padding: 16px;
+  width: 350px;
+  color: #fff;
+  border-radius: 8px;
+  max-height: 80vh;
+  overflow: auto;
+}
+#recent-files-content h2 {
+  margin-top: 0;
+}
+#recent-files-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#recent-files-list li {
+  cursor: pointer;
+  padding: 6px 0;
+  border-bottom: 1px solid #444;
+}
+#recent-files-list li:hover {
+  background-color: #007acc;
+}
+#close-recent {
+  background-color: #007acc;
+  border: none;
+  color: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+#close-recent:hover {
+  opacity: 0.8;
+}

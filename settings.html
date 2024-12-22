@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Application Settings</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="settings-body">
+  <h1>Settings</h1>
+  <div class="settings-container">
+    <h2>Theme Options</h2>
+    <label>
+      <input type="checkbox" id="chk-dark-theme" />
+      Enable Dark Theme
+    </label>
+    <br/><br/>
+
+    <h2>Editor Preferences</h2>
+    <label>
+      <input type="checkbox" id="chk-line-numbers" />
+      Show Line Numbers
+    </label>
+    <br/>
+    <label>
+      <input type="checkbox" id="chk-soft-wrap" />
+      Soft Wrap
+    </label>
+    <br/><br/>
+
+    <h2>Auto Save Interval</h2>
+    <select id="sel-auto-save-interval">
+      <option value="2">2 seconds</option>
+      <option value="5">5 seconds</option>
+      <option value="10">10 seconds</option>
+      <option value="30">30 seconds</option>
+    </select>
+    <br/><br/>
+
+    <h2>Other Options</h2>
+    <label for="txt-default-author">Default Author Name:</label>
+    <input type="text" id="txt-default-author" placeholder="Enter your name..."/>
+    <br/><br/>
+
+    <button id="btn-save-settings">Save</button>
+    <button id="btn-cancel-settings">Cancel</button>
+  </div>
+
+  <script>
+    // We'll just do some placeholder logic. If you want to persist them,
+    // you'd do an ipcRenderer call to main. (We are only showing a minimal approach.)
+
+    const { ipcRenderer } = require('electron');
+
+    const btnSaveSettings = document.getElementById('btn-save-settings');
+    const btnCancelSettings = document.getElementById('btn-cancel-settings');
+    const chkDarkTheme = document.getElementById('chk-dark-theme');
+    const chkLineNumbers = document.getElementById('chk-line-numbers');
+    const chkSoftWrap = document.getElementById('chk-soft-wrap');
+    const selAutoSave = document.getElementById('sel-auto-save-interval');
+    const txtAuthor = document.getElementById('txt-default-author');
+
+    // You might want to load current settings from main or from a local file
+    // We can do a minimal approach here:
+    window.addEventListener('DOMContentLoaded', () => {
+      // Possibly read from your settings.json or from 'ipcRenderer.invoke(...)'
+      // For now, placeholders
+      console.log('[Settings] DOMContentLoaded => ready');
+    });
+
+    btnSaveSettings.addEventListener('click', () => {
+      // Gather changes
+      const newSettings = {
+        themeDark: chkDarkTheme.checked,
+        showLineNumbers: chkLineNumbers.checked,
+        softWrap: chkSoftWrap.checked,
+        autoSaveInterval: selAutoSave.value,
+        defaultAuthor: txtAuthor.value.trim()
+      };
+      console.log('[Settings] saving new settings =>', newSettings);
+
+      // Send them to main or maybe to the main window
+      ipcRenderer.send('save-settings', newSettings);
+
+      // Close this window
+      window.close();
+    });
+
+    btnCancelSettings.addEventListener('click', () => {
+      window.close();
+    });
+  </script>
+</body>
+</html>

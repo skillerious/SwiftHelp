@@ -1,0 +1,15 @@
+{
+  "name": "electron-help-tool-dockable",
+  "version": "1.0.0",
+  "description": "Electron-based help tool with Rich Media Embeds, Themes, and Dockable Panels",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "You",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^25.3.0",
+    "marked": "^5.0.0"
+  }
+}

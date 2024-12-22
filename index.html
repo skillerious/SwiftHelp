@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SwiftHelp Editor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Toolbar with local PNG icons in /assets/ -->
+    <div id="top-toolbar">
+      <!-- Project / File icons -->
+      <button id="btn-new" title="New Project">
+        <img src="./assets/new.png" alt="New Project" />
+      </button>
+      <button id="btn-open" title="Open File / Project">
+        <img src="./assets/open.png" alt="Open" />
+      </button>
+      <button id="btn-save" title="Save File / Project">
+        <img src="./assets/save.png" alt="Save" />
+      </button>
+      <button id="btn-export-html" title="Export to HTML">
+        <img src="./assets/export.png" alt="Export HTML" />
+      </button>
+      <button id="btn-export-pdf" title="Export to PDF">
+        <img src="./assets/export-pdf.png" alt="Export PDF" />
+      </button>
+
+      <div class="divider"></div>
+
+      <!-- Formatting icons (colorful) -->
+      <button id="btn-bold" title="Bold">
+        <img src="./assets/bold.png" alt="Bold" />
+      </button>
+      <button id="btn-italic" title="Italic">
+        <img src="./assets/italic.png" alt="Italic" />
+      </button>
+      <button id="btn-underline" title="Underline">
+        <img src="./assets/underline.png" alt="Underline" />
+      </button>
+      <button id="btn-bullet-list" title="Bullet List">
+        <img src="./assets/bullet.png" alt="Bullet List" />
+      </button>
+      <button id="btn-number-list" title="Numbered List">
+        <img src="./assets/number.png" alt="Numbered List" />
+      </button>
+      <button id="btn-inline-code" title="Inline Code">
+        <img src="./assets/code.png" alt="Inline Code" />
+      </button>
+
+      <div class="divider"></div>
+
+      <!-- Insert items -->
+      <button id="btn-insert-img" title="Insert Image">
+        <img src="./assets/insert-img.png" alt="Insert Image" />
+      </button>
+      <button id="btn-insert-link" title="Insert Link">
+        <img src="./assets/insert-link.png" alt="Insert Link" />
+      </button>
+      <button id="btn-insert-table" title="Insert Table">
+        <img src="./assets/insert-table.png" alt="Insert Table" />
+      </button>
+      <button id="btn-insert-code" title="Insert Code Block">
+        <img src="./assets/insert-code.png" alt="Insert Code" />
+      </button>
+      <button id="btn-spellcheck" title="Spell Check">
+        <img src="./assets/spellcheck.png" alt="Spell Check" />
+      </button>
+
+      <div class="divider"></div>
+
+      <!-- Additional robust features: "Recent Files," "Auto Save," "Pin Sidebar" -->
+      <div id="advanced-features">
+        <button id="btn-recent-files" title="Open Recent Files">
+          <img src="./assets/recent.png" alt="Recent Files" />
+        </button>
+        <label for="chk-auto-save" class="auto-save-label">
+          <img src="./assets/autosave.png" alt="Auto Save" />
+          <input type="checkbox" id="chk-auto-save" />
+          Auto Save
+        </label>
+        <button id="btn-pin-sidebar" title="Pin Sidebar">
+          <img src="./assets/pin.png" alt="Pin Sidebar" />
+        </button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Theme toggle -->
+      <label class="toggle-theme-label" for="toggle-theme">
+        <input type="checkbox" id="toggle-theme" />
+        <span>Light Mode</span>
+      </label>
+    </div>
+
+    <!-- Main Layout: Sidebar + vertical splitter + Editor/Preview side-by-side -->
+    <div id="main-split-container">
+      <!-- Sidebar -->
+      <div id="sidebar-container">
+        <div class="sidebar-header">
+          <h2>Sections</h2>
+          <button id="btn-add-section">+ Add Section</button>
+        </div>
+        <ul id="sections-list"></ul>
+      </div>
+
+      <div id="vertical-splitter"></div>
+
+      <!-- Editor + Preview container -->
+      <div id="editor-preview-split">
+        <!-- Editor panel -->
+        <div id="editor-panel">
+          <div class="search-replace-container">
+            <input type="text" id="search-input" placeholder="Search across all sections..." />
+            <input type="text" id="replace-input" placeholder="Replace..." />
+            <button id="btn-search">Find</button>
+            <button id="btn-replace">Replace</button>
+          </div>
+          <textarea id="markdown-editor" placeholder="Start writing your Markdown here..."></textarea>
+        </div>
+        <!-- Preview panel -->
+        <div id="preview-panel">
+          <div id="preview-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context menu for sections -->
+  <div id="section-context-menu" class="context-menu">
+    <div id="ctx-rename" class="context-menu-item">Rename</div>
+    <div id="ctx-duplicate" class="context-menu-item">Duplicate</div>
+    <div id="ctx-delete" class="context-menu-item">Delete</div>
+  </div>
+
+  <!-- Rename overlay -->
+  <div id="rename-overlay">
+    <div id="rename-overlay-content">
+      <h2>Rename Section</h2>
+      <input type="text" id="rename-input" placeholder="New section name" />
+      <div id="rename-overlay-buttons">
+        <button id="rename-save">Save</button>
+        <button id="rename-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Files Overlay -->
+  <div id="recent-files-overlay">
+    <div id="recent-files-content">
+      <h2>Recent Files</h2>
+      <ul id="recent-files-list"></ul>
+      <button id="close-recent">Close</button>
+    </div>
+  </div>
+
+  <!-- The updated renderer.js that includes robust placeholders for auto-save, pinned sidebar, recent files, etc. -->
+  <script src="renderer.js"></script>
+</body>
+</html>
