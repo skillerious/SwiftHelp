@@ -67,7 +67,7 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 *(Below are example placeholders—replace with actual images if you wish.)*
 
 1. **Main Editor Window**  
-   ![Main Editor Preview](./docs/screenshots/main_editor.png)
+   ![Main Editor Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/Screenshot%202024-12-22%20133907.png)
 
 2. **Exported HTML**  
    ![Exported HTML Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/Screenshot%202024-12-22%20133942.png)
