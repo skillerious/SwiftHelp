@@ -1,0 +1,99 @@
+/* sidebar.css */
+
+/* Existing styles... */
+
+/* Additional styles for better visuals */
+
+.sections-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-item {
+  padding: 0.75rem;
+  cursor: pointer;
+  background-color: #343a40;
+  color: #fff;
+  font-weight: bold;
+  position: relative;
+}
+
+.category-item:hover {
+  background-color: #495057;
+}
+
+/* Expand/Collapse Indicator */
+.category-item::after {
+  content: '\f0da'; /* FontAwesome chevron-down icon */
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s;
+}
+
+.category-item.collapsed::after {
+  transform: rotate(-90deg);
+}
+
+/* Subcategory List */
+.subcategory-list {
+  list-style: none;
+  padding-left: 1rem;
+  display: none; /* Hidden by default */
+}
+
+.subcategory-item {
+  padding: 0.5rem 0;
+  cursor: pointer;
+  color: #ced4da;
+  position: relative;
+}
+
+.subcategory-item:hover {
+  color: #fff;
+}
+
+/* Expand/Collapse Indicator for Subcategories */
+.subcategory-item::after {
+  content: '\f0da'; /* FontAwesome chevron-down icon */
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s;
+}
+
+.subcategory-item.collapsed::after {
+  transform: rotate(-90deg);
+}
+
+/* Section List */
+.section-list {
+  list-style: none;
+  padding-left: 1rem;
+  display: none; /* Hidden by default */
+}
+
+.section-item {
+  padding: 0.25rem 0;
+  cursor: pointer;
+  color: #adb5bd;
+}
+
+.section-item:hover {
+  color: #fff;
+}
+
+/* Active Section Highlight */
+.section-item.active {
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  /* Adjust padding or font sizes for smaller screens if necessary */
+}

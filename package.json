@@ -1,15 +1,23 @@
 {
-  "name": "electron-help-tool-dockable",
+  "name": "electron-docs-app",
   "version": "1.0.0",
-  "description": "Electron-based help tool with Rich Media Embeds, Themes, and Dockable Panels",
+  "description": "An Electron application for documentation with subcategories in the sidebar.",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-packager . electron-docs-app --platform=win32 --arch=x64 --overwrite"
   },
-  "author": "You",
+  "author": "Your Name",
   "license": "MIT",
+  "dependencies": {
+    "dompurify": "^2.4.0",
+    "electron": "^25.3.1",
+    "font-awesome": "^4.7.0",
+    "highlight.js": "^11.11.0",
+    "marked": "^5.1.2",
+    "pdfkit": "^0.15.2"
+  },
   "devDependencies": {
-    "electron": "^25.3.0",
-    "marked": "^5.0.0"
+    "electron-packager": "^17.1.1"
   }
 }

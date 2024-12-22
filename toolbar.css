@@ -1,0 +1,62 @@
+/* toolbar.css */
+.navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .navbar-left, .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .navbar-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  #currentSectionTitle {
+    font-size: inherit;
+    line-height: inherit;
+    max-width: 250px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  
+  .title-brand {
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+  
+  .btn-accent {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+  }
+  
+  .navbar-toggler.btn-accent {
+    background-color: #007bff;
+    border: none;
+  }
+  
+  /* **Added CSS to set toolbar background color** */
+  #mainNavbar {
+    background-color: #1e1e1e !important; /* Dark background */
+  }
+  
+  /* Optional: Adjust text color if needed */
+  #mainNavbar .navbar-brand,
+  #mainNavbar .btn-accent {
+    color: #ffffff;
+  }
+  
+  #mainNavbar .navbar-toggler .bi-list {
+    color: #ffffff;
+  }
+  

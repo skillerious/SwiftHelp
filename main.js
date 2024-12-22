@@ -8,6 +8,9 @@ const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// Import 'marked' for Markdown parsing
+const marked = require('marked');
+
 let mainWindow;
 
 function createWindow() {
@@ -18,6 +21,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
+      // No preload script as per your preference
     }
   });
 
@@ -27,6 +31,11 @@ function createWindow() {
   // Mirror renderer logs to the terminal
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
     console.log(`[Renderer Log] ${message} (line: ${line}, source: ${sourceId})`);
+  });
+
+  // Handle window closed
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
 }
 
@@ -75,6 +84,7 @@ function createMenu() {
         { role: 'quit' }
       ]
     }
+    // Additional menus can be added here (e.g., Edit, View, Help)
   ];
 
   const menu = Menu.buildFromTemplate(template);
@@ -85,14 +95,14 @@ app.whenReady().then(() => {
   console.log('[Main] App ready...');
   createWindow();
   createMenu();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,7 +132,7 @@ ipcMain.on('save-settings', (event, newSettings) => {
   console.log('[Main] save-settings =>', newSettings);
   const settingsPath = path.join(__dirname, 'settings.json');
 
-  // Attempt to load existing so we don't overwrite other fields
+  // Attempt to load existing settings to avoid overwriting unrelated fields
   let currentSettings = {
     sidebarWidth: 300,
     recentFiles: [],
@@ -133,10 +143,10 @@ ipcMain.on('save-settings', (event, newSettings) => {
     const raw = fs.readFileSync(settingsPath, 'utf-8');
     currentSettings = JSON.parse(raw);
   } catch (e) {
-    // if no file, we'll create one
+    // If no existing file, defaults will be used
   }
 
-  // Merge
+  // Merge new settings with existing ones
   const updated = { ...currentSettings, ...newSettings };
   fs.writeFileSync(settingsPath, JSON.stringify(updated, null, 2), 'utf-8');
 });
@@ -162,7 +172,7 @@ ipcMain.on('open-file-dialog', async (event) => {
   const ext = path.extname(filePath).toLowerCase();
 
   if (ext === '.json') {
-    // multiple sections
+    // Handle multiple sections (project)
     try {
       const raw = fs.readFileSync(filePath, 'utf-8');
       const sectionsData = JSON.parse(raw);
@@ -178,7 +188,7 @@ ipcMain.on('open-file-dialog', async (event) => {
       event.reply('open-file-result', { canceled: true, error: 'JSON parse error' });
     }
   } else {
-    // single-file
+    // Handle single Markdown file
     const content = fs.readFileSync(filePath, 'utf-8');
     event.reply('open-file-result', {
       canceled: false,
@@ -204,12 +214,12 @@ ipcMain.on('save-file-dialog', async (event, payload) => {
 
   const ext = path.extname(filePath).toLowerCase();
   if (ext === '.json') {
-    // entire project (multiple sections)
+    // Save entire project (multiple sections)
     const sectionsData = payload.sections || [];
     fs.writeFileSync(filePath, JSON.stringify(sectionsData, null, 2), 'utf-8');
     event.reply('save-file-result', { canceled: false, filePath });
   } else {
-    // single .md
+    // Save single Markdown file
     const content = payload.content || '';
     fs.writeFileSync(filePath, content, 'utf-8');
     event.reply('save-file-result', { canceled: false, filePath });
@@ -229,10 +239,15 @@ ipcMain.on('export-html', async (event, sectionsData) => {
     return;
   }
 
-  const finalHtml = buildEnhancedDarkHtml(sectionsData);
-  fs.writeFileSync(filePath, finalHtml, 'utf-8');
-  event.reply('export-html-result', { canceled: false, filePath });
-  console.log('[Main] HTML exported to:', filePath);
+  try {
+    const finalHtml = buildEnhancedDarkHtml(sectionsData);
+    fs.writeFileSync(filePath, finalHtml, 'utf-8');
+    event.reply('export-html-result', { canceled: false, filePath });
+    console.log('[Main] HTML exported to:', filePath);
+  } catch (err) {
+    console.error('[Main] Error exporting HTML:', err);
+    event.reply('export-html-result', { canceled: true, error: err.message });
+  }
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -240,7 +255,12 @@ ipcMain.on('export-html', async (event, sectionsData) => {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function buildEnhancedDarkHtml(sectionsData) {
   const marked = require('marked');
-  marked.use({ mangle: false, headerIds: false });
+  // Updated 'marked' configuration to remove deprecated options
+  marked.setOptions({
+    mangle: false,
+    headerIds: false
+    // Removed 'highlight' and 'langPrefix' to eliminate deprecation warnings
+  });
 
   // Convert sections => HTML
   const sectionsHtml = sectionsData.map(sec => ({
@@ -249,113 +269,154 @@ function buildEnhancedDarkHtml(sectionsData) {
   }));
   const stringifiedSections = JSON.stringify(sectionsHtml);
 
-  // The full HTML below includes:
-  // - Offcanvas sidebar
-  // - Navbar with next/prev/home, print, toggle mode
-  // - Searching logic, highlight, etc.
-  // - Minimal styling inline for dark/light
-  const inlineCSS = `
-    body {
-      margin: 0; padding: 0;
-      font-family: system-ui, sans-serif;
-      background-color: #121212;
-      color: #f0f0f0;
-      height: 100vh;
-    }
-    body.light-mode {
-      background-color: #f8f9fa;
-      color: #212529;
-    }
-    .btn-accent {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-    }
-    .offcanvas-body {
-      background-color: #1e1e1e;
-      color: #f0f0f0;
-    }
-    body.light-mode .offcanvas-body {
-      background-color: #f8f9fa;
-      color: #212529;
-    }
-    #sections-list {
-      list-style: none; padding-left: 0;
-    }
-    .section-item {
-      padding: 0.75rem;
-      border-bottom: 1px solid #333;
-      cursor: pointer;
-    }
-    .section-item:hover {
-      background-color: #007bff;
-      color: #fff;
-    }
+  // Read toolbar and sidebar HTML, CSS, and JS
+  const toolbarHTML = fs.readFileSync(path.join(__dirname, 'toolbar.html'), 'utf-8');
+  const toolbarCSS = fs.readFileSync(path.join(__dirname, 'toolbar.css'), 'utf-8');
+  const toolbarJS = fs.readFileSync(path.join(__dirname, 'toolbar.js'), 'utf-8');
+
+  const sidebarHTML = fs.readFileSync(path.join(__dirname, 'sidebar.html'), 'utf-8');
+  const sidebarCSS = fs.readFileSync(path.join(__dirname, 'sidebar.css'), 'utf-8');
+  const sidebarJS = fs.readFileSync(path.join(__dirname, 'sidebar.js'), 'utf-8');
+
+  // Define inline CSS to enhance Markdown formatting and link colors
+  const markdownCSS = `
+    /* Styles specific to Markdown content */
     #help-content {
       padding: 1rem;
       background-color: #181818;
       height: calc(100vh - 56px);
       overflow-y: auto;
+      color: #f0f0f0; /* Ensure text color inside help-content */
     }
     body.light-mode #help-content {
       background-color: #ffffff;
       color: #000000;
     }
-    .highlight {
-      background-color: yellow; color: #000; font-weight: bold;
+
+    /* Link Styling within help-content */
+    #help-content a {
+      color: #66aaff; /* Preferred link color */
+      text-decoration: underline;
     }
-    code {
-      background-color: #222; padding: 2px 4px; border-radius: 3px;
+    #help-content a:hover {
+      color: #5599ff;
     }
-    a {
-      color: #66aaff;
+
+    /* Enhanced Code Blocks within help-content */
+    #help-content pre {
+      background-color: #2d2d2d;
+      border-left: 5px solid #28a745; /* Green sidebar */
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 1rem 0;
     }
-    /* Navbar container: left, center, right */
-    .navbar-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    #help-content pre code {
+      background: none; /* Remove background from code */
+      color: inherit; /* Inherit color from parent */
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.95em;
+    }
+
+    /* Enhanced Blockquotes within help-content */
+    #help-content blockquote {
+      border-left: 5px solid #ffc107; /* Yellow sidebar */
+      background-color: #2a2a2a;
+      padding: 0.5rem 1rem;
+      margin: 1rem 0;
+      border-radius: 5px;
+      color: #f8f0a3;
+    }
+    body.light-mode #help-content blockquote {
+      background-color: #fff3cd;
+      border-left: 5px solid #ffc107;
+      color: #856404;
+    }
+
+    /* Enhanced Tables within help-content */
+    #help-content table {
       width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
     }
-    .navbar-left, .navbar-right {
-      display: flex; align-items: center; gap: 0.5rem;
+    #help-content th, #help-content td {
+      border: 1px solid #555;
+      padding: 0.5rem;
+      text-align: left;
     }
-    .navbar-center {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      position: relative;
+    #help-content th {
+      background-color: #343a40;
+      color: #fff;
     }
-    #currentSectionTitle {
-      font-size: inherit;
-      line-height: inherit;
-      max-width: 250px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
+    body.light-mode #help-content th {
+      background-color: #007bff;
+      color: #fff;
     }
-    .title-brand {
-      font-size: 1.125rem; line-height: 1.5;
+    #help-content tr:nth-child(even) {
+      background-color: #2d2d2d;
+    }
+    body.light-mode #help-content tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    /* Additional Enhancements for Headings within help-content */
+    #help-content h1, #help-content h2, #help-content h3, #help-content h4, #help-content h5, #help-content h6 {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 0.3em;
+      margin-top: 1.5em;
+    }
+    body.light-mode #help-content h1, 
+    body.light-mode #help-content h2, 
+    body.light-mode #help-content h3, 
+    body.light-mode #help-content h4, 
+    body.light-mode #help-content h5, 
+    body.light-mode #help-content h6 {
+      border-bottom: 2px solid #007bff;
+    }
+
+    /* General Markdown Styling within help-content */
+    #help-content p {
+      line-height: 1.6;
+      margin: 1rem 0;
+    }
+    #help-content ul, #help-content ol {
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+    #help-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+
+    /* Highlighting within help-content */
+    .highlight {
+      background-color: yellow; 
+      color: #000; 
+      font-weight: bold;
+    }
+
+    /* Inline Code Styling within help-content */
+    #help-content code {
+      background-color: #222; 
+      padding: 2px 4px; 
+      border-radius: 3px;
     }
   `;
 
-  const inlineJS = `
+  // Define inline JS for the exported HTML (Markdown content)
+  const markdownJS = `
     let sections = ${stringifiedSections};
     let currentIndex = 0;
     let isLightMode = false;
 
     document.addEventListener('DOMContentLoaded', () => {
-      const offcanvasSidebar = document.getElementById('offcanvasSidebar');
-      const sectionsList = document.getElementById('sections-list');
       const helpContent = document.getElementById('help-content');
       const sectionTitle = document.getElementById('currentSectionTitle');
-
-      const printBtn = document.getElementById('printBtn');
-      const searchBtn = document.getElementById('searchBtn');
-      const searchInput = document.getElementById('search-input');
 
       const btnNext = document.getElementById('btnNext');
       const btnPrev = document.getElementById('btnPrev');
       const btnHome = document.getElementById('btnHome');
-      const toggleModeBtn = document.getElementById('toggleModeBtn');
 
       // Populate the sidebar with section titles
       sections.forEach((sec, i) => {
@@ -363,29 +424,16 @@ function buildEnhancedDarkHtml(sectionsData) {
         li.classList.add('section-item');
         li.textContent = sec.title;
         li.addEventListener('click', () => loadSection(i));
-        sectionsList.appendChild(li);
+        document.getElementById('sections-list').appendChild(li);
       });
       loadSection(0);
 
-      // If using Bootstrap, show offcanvas by default
-      if (offcanvasSidebar && typeof bootstrap !== 'undefined') {
-        const bsOffcanvas = new bootstrap.Offcanvas(offcanvasSidebar);
-        bsOffcanvas.show();
-      }
-
-      // Print
-      printBtn.addEventListener('click', () => {
+      // Print functionality
+      document.getElementById('printBtn').addEventListener('click', () => {
         window.print();
       });
 
-      // Search => highlight
-      searchBtn.addEventListener('click', () => {
-        const query = (searchInput.value || '').trim();
-        if (!query) return;
-        highlightAll(query.toLowerCase());
-      });
-
-      // Next/Prev/Home
+      // Next/Prev/Home functionality
       btnNext.addEventListener('click', () => {
         if (currentIndex < sections.length - 1) {
           loadSection(currentIndex + 1);
@@ -401,7 +449,7 @@ function buildEnhancedDarkHtml(sectionsData) {
       });
 
       // Toggle dark/light mode
-      toggleModeBtn.addEventListener('click', () => {
+      document.getElementById('toggleModeBtn').addEventListener('click', () => {
         isLightMode = !isLightMode;
         document.body.classList.toggle('light-mode', isLightMode);
         const navBar = document.getElementById('mainNavbar');
@@ -425,10 +473,17 @@ function buildEnhancedDarkHtml(sectionsData) {
         let replaced = html.replace(regex, match => '<span class="highlight">' + match + '</span>');
         helpContent.innerHTML = replaced;
       }
+
+      // Search functionality
+      document.getElementById('searchBtn').addEventListener('click', () => {
+        const query = (document.getElementById('search-input').value || '').trim().toLowerCase();
+        if (!query) return;
+        highlightAll(query);
+      });
     });
   `;
 
-  // Return the entire HTML string
+  // Return the entire HTML string with embedded toolbar, sidebar, and Markdown enhancements
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -439,130 +494,44 @@ function buildEnhancedDarkHtml(sectionsData) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <style>${inlineCSS}</style>
+  <!-- Toolbar CSS -->
+  <style>
+    ${toolbarCSS}
+  </style>
+  <!-- Sidebar CSS -->
+  <style>
+    ${sidebarCSS}
+  </style>
+  <!-- Markdown Content CSS -->
+  <style>
+    ${markdownCSS}
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-dark sticky-top px-3" id="mainNavbar">
-    <div class="navbar-container w-100">
-      <!-- Left: hamburger + 'Help Docs' -->
-      <div class="navbar-left">
-        <button class="navbar-toggler btn-accent me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
-          <i class="bi bi-list"></i>
-        </button>
-        <span class="navbar-brand mb-0 title-brand">Help Docs</span>
-      </div>
-      <!-- Center: current section title -->
-      <div class="navbar-center">
-        <span id="currentSectionTitle" class="navbar-brand mb-0 title-brand"></span>
-      </div>
-      <!-- Right: next/prev/home, print, toggle -->
-      <div class="navbar-right">
-        <button class="btn btn-accent" id="btnPrev" title="Previous Section">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <button class="btn btn-accent" id="btnHome" title="Home (First Section)">
-          <i class="bi bi-house-door-fill"></i>
-        </button>
-        <button class="btn btn-accent" id="btnNext" title="Next Section">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button class="btn btn-accent" id="printBtn" title="Print">
-          <i class="bi bi-printer"></i>
-        </button>
-        <button class="btn btn-accent" id="toggleModeBtn" title="Dark/Light Toggle">
-          <i class="bi bi-lightbulb"></i>
-        </button>
-      </div>
-    </div>
-  </nav>
+  <!-- Toolbar HTML -->
+  ${toolbarHTML}
 
-  <!-- Offcanvas sidebar -->
-  <div class="offcanvas offcanvas-start text-light" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel" style="background-color:#1e1e1e;">
-    <div class="offcanvas-header border-bottom">
-      <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Sections</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-      <ul id="sections-list"></ul>
-      <div class="input-group mb-3">
-        <input type="text" class="form-control form-control-dark" id="search-input" placeholder="Search..."/>
-        <button class="btn btn-accent" type="button" id="searchBtn">
-          <i class="bi bi-search"></i>
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- Sidebar HTML -->
+  ${sidebarHTML}
 
+  <!-- Markdown Content -->
   <div id="help-content"></div>
 
+  <!-- Toolbar JS -->
+  <script>
+    ${toolbarJS}
+  </script>
+  <!-- Sidebar JS -->
+  <script>
+    ${sidebarJS}
+  </script>
+  <!-- Markdown Content JS -->
+  <script>
+    ${markdownJS}
+  </script>
   <!-- Bootstrap 5 Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>${inlineJS}</script>
 </body>
 </html>
   `;
 }
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Export to PDF
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ipcMain.on('menu-export-pdf', async () => {
-  console.log('[Main] menu-export-pdf => triggered');
-  const { canceled, filePath } = await dialog.showSaveDialog({
-    filters: [{ name: 'PDF', extensions: ['pdf'] }]
-  });
-  if (canceled || !filePath) {
-    return;
-  }
-
-  try {
-    const pdfData = await mainWindow.webContents.printToPDF({
-      landscape: false,
-      marginsType: 0,
-      printBackground: true,
-      pageSize: 'A4'
-    });
-    fs.writeFileSync(filePath, pdfData);
-    console.log('[Main] PDF exported to:', filePath);
-    mainWindow.webContents.send('export-pdf-result', { filePath });
-  } catch (err) {
-    console.error('[Main] printToPDF error:', err);
-    mainWindow.webContents.send('export-pdf-result', { error: err.message });
-  }
-});
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Recent Files Logic
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ipcMain.on('update-recent-files', (event, filePath) => {
-  console.log('[Main] update-recent-files =>', filePath);
-
-  const settingsPath = path.join(__dirname, 'settings.json');
-  let settings = {
-    sidebarWidth: 300,
-    recentFiles: [],
-    autoSave: false,
-    pinnedSidebar: false
-  };
-  try {
-    const raw = fs.readFileSync(settingsPath, 'utf-8');
-    settings = JSON.parse(raw);
-  } catch(e) {
-    // no existing file, use defaults
-  }
-
-  // Insert or bump file to front
-  const idx = settings.recentFiles.indexOf(filePath);
-  if (idx !== -1) {
-    settings.recentFiles.splice(idx, 1);
-  }
-  settings.recentFiles.unshift(filePath);
-
-  // limit to 5
-  if (settings.recentFiles.length > 5) {
-    settings.recentFiles.pop();
-  }
-
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
-  event.reply('recent-files-updated', settings.recentFiles);
-});
