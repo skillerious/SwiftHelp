@@ -4,6 +4,165 @@
   <meta charset="UTF-8">
   <title>SwiftHelp Editor</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- CodeMirror CSS & Theme (CDN) -->
+  <link 
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/lib/codemirror.css"
+  />
+  <!-- Dark Theme: Dracula -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/theme/dracula.css"
+  />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #1e1e1e; /* consistent dark background if desired */
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh; /* full window */
+    }
+
+    /* The top toolbar remains at the top */
+    #top-toolbar {
+      flex-shrink: 0;
+    }
+
+    /* The main container for the sidebar + editor/preview */
+    #main-split-container {
+      display: flex;
+      flex: 1; /* fill leftover space after toolbar */
+      overflow: hidden;
+    }
+
+    /* Sidebar remains fixed width or resizable via the vertical splitter */
+    #sidebar-container {
+      background: #2a2a2a;
+      overflow-y: auto;
+    }
+    .sidebar-header {
+      padding: 0.5rem;
+      background: #3a3a3a;
+    }
+
+    /* The vertical splitter */
+    #vertical-splitter {
+      width: 4px;
+      background: #444;
+      cursor: col-resize;
+    }
+
+    /* Editor + Preview container side by side => display: flex */
+    #editor-preview-split {
+      display: flex;
+      flex: 1;
+      overflow: hidden; /* or auto if you prefer */
+    }
+
+    /* Editor panel => 50% width */
+    #editor-panel {
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      flex: 1;
+      max-width: 50%; /* ensures it doesn't expand beyond 50% */
+      background: #1e1e1e;
+      overflow: hidden;
+    }
+
+    .search-replace-container {
+      flex-shrink: 0;
+      padding: 4px;
+      background: #2a2a2a;
+    }
+
+    /* CodeMirror parent => fill remainder of editor-panel */
+    #editor-cm {
+      flex: 1;
+      overflow: hidden;
+    }
+    .CodeMirror {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Preview panel => the other 50% */
+    #preview-panel {
+      width: 50%;
+      flex: 1;
+      max-width: 50%;
+      background: #1f1f1f; /* or #2a2a2a, choose your color */
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Improved preview styling */
+    #preview-content {
+      padding: 16px;
+      color: #f0f0f0;
+      flex: 1; /* so it expands to fill panel */
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      line-height: 1.6;
+    }
+    #preview-content h1,
+    #preview-content h2,
+    #preview-content h3,
+    #preview-content h4,
+    #preview-content h5,
+    #preview-content h6 {
+      color: #fff;
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid #444; /* subtle underline */
+      padding-bottom: 0.2rem;
+    }
+    #preview-content p {
+      margin: 0.8rem 0;
+    }
+    #preview-content a {
+      color: #007ACC;
+      text-decoration: underline;
+    }
+    #preview-content a:hover {
+      color: #66aaff; /* a lighter blue on hover */
+    }
+    #preview-content code {
+      background: #333;
+      color: #ffd700;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+    }
+    #preview-content pre {
+      background: #2a2a2a;
+      border-left: 4px solid #007ACC;
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    #preview-content blockquote {
+      border-left: 4px solid #007ACC;
+      background: #2a2a2a;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+      color: #ddd;
+    }
+    #preview-content ul,
+    #preview-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    #preview-content li {
+      margin-bottom: 0.4rem;
+    }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -19,11 +178,18 @@
       <button id="btn-save" title="Save File / Project">
         <img src="./assets/save.png" alt="Save" />
       </button>
+      <button id="btn-export-pdf" title="Export to PDF">
+        <img src="./assets/export-pdf.png" alt="Export PDF" />
+      </button>
+
+      <div class="divider"></div>
+
       <button id="btn-export-html" title="Export to HTML">
         <img src="./assets/export.png" alt="Export HTML" />
       </button>
-      <button id="btn-export-pdf" title="Export to PDF">
-        <img src="./assets/export-pdf.png" alt="Export PDF" />
+      <!-- "Play" button for preview -->
+      <button id="btn-play" title="Preview in Browser">
+        <img src="./assets/play.png" alt="Preview in Browser" />
       </button>
 
       <div class="divider"></div>
@@ -38,6 +204,9 @@
       <button id="btn-underline" title="Underline">
         <img src="./assets/underline.png" alt="Underline" />
       </button>
+      <button id="btn-heading" title="Insert Heading">
+        <img src="./assets/heading.png" alt="Heading" />
+      </button>
       <button id="btn-bullet-list" title="Bullet List">
         <img src="./assets/bullet.png" alt="Bullet List" />
       </button>
@@ -46,6 +215,9 @@
       </button>
       <button id="btn-inline-code" title="Inline Code">
         <img src="./assets/code.png" alt="Inline Code" />
+      </button>
+      <button id="btn-quote" title="Blockquote">
+        <img src="./assets/quote.png" alt="Blockquote" />
       </button>
 
       <div class="divider"></div>
@@ -66,31 +238,12 @@
       <button id="btn-spellcheck" title="Spell Check">
         <img src="./assets/spellcheck.png" alt="Spell Check" />
       </button>
-
+      
+      <!-- Settings button on the far right -->
       <div class="divider"></div>
-
-      <!-- Additional robust features: "Recent Files," "Auto Save," "Pin Sidebar" -->
-      <div id="advanced-features">
-        <button id="btn-recent-files" title="Open Recent Files">
-          <img src="./assets/recent.png" alt="Recent Files" />
-        </button>
-        <label for="chk-auto-save" class="auto-save-label">
-          <img src="./assets/autosave.png" alt="Auto Save" />
-          <input type="checkbox" id="chk-auto-save" />
-          Auto Save
-        </label>
-        <button id="btn-pin-sidebar" title="Pin Sidebar">
-          <img src="./assets/pin.png" alt="Pin Sidebar" />
-        </button>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Theme toggle -->
-      <label class="toggle-theme-label" for="toggle-theme">
-        <input type="checkbox" id="toggle-theme" />
-        <span>Light Mode</span>
-      </label>
+      <button id="btn-settings" title="Settings">
+        <img src="./assets/settings.png" alt="Settings" />
+      </button>
     </div>
 
     <!-- Main Layout: Sidebar + vertical splitter + Editor/Preview side-by-side -->
@@ -106,9 +259,9 @@
 
       <div id="vertical-splitter"></div>
 
-      <!-- Editor + Preview container -->
+      <!-- Editor + Preview container => each 50% width -->
       <div id="editor-preview-split">
-        <!-- Editor panel -->
+        <!-- Editor panel (50%) -->
         <div id="editor-panel">
           <div class="search-replace-container">
             <input type="text" id="search-input" placeholder="Search across all sections..." />
@@ -116,9 +269,10 @@
             <button id="btn-search">Find</button>
             <button id="btn-replace">Replace</button>
           </div>
-          <textarea id="markdown-editor" placeholder="Start writing your Markdown here..."></textarea>
+          <!-- CodeMirror container -->
+          <div id="editor-cm"></div>
         </div>
-        <!-- Preview panel -->
+        <!-- Preview panel (50%) -->
         <div id="preview-panel">
           <div id="preview-content"></div>
         </div>
@@ -145,16 +299,27 @@
     </div>
   </div>
 
-  <!-- Recent Files Overlay -->
-  <div id="recent-files-overlay">
-    <div id="recent-files-content">
-      <h2>Recent Files</h2>
-      <ul id="recent-files-list"></ul>
-      <button id="close-recent">Close</button>
+  <!-- Table Editor Overlay -->
+  <div id="table-editor-overlay" class="dialog-overlay">
+    <div class="dialog-content">
+      <h2>Table Editor</h2>
+      <label>Rows: <input type="number" id="table-rows" min="1" value="2"></label>
+      <label>Columns: <input type="number" id="table-cols" min="1" value="2"></label>
+      <div class="dialog-buttons">
+        <button id="table-editor-apply">Apply</button>
+        <button id="table-editor-cancel">Cancel</button>
+      </div>
     </div>
   </div>
 
-  <!-- The updated renderer.js that includes robust placeholders for auto-save, pinned sidebar, recent files, etc. -->
+  <!-- CodeMirror JS + Markdown mode (CDN) -->
+  <script 
+    src="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/lib/codemirror.js">
+  </script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/mode/markdown/markdown.js">
+  </script>
+  <!-- The updated renderer.js (unchanged except for codeMirror usage) -->
   <script src="renderer.js"></script>
 </body>
 </html>
