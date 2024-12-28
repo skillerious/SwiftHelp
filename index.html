@@ -17,31 +17,41 @@
   />
 
   <style>
+    /* Fill entire viewport */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background: #1e1e1e; /* consistent dark background if desired */
+      background: #1e1e1e; /* consistent background */
     }
     #app {
       display: flex;
       flex-direction: column;
-      height: 100vh; /* full window */
+      height: 100vh;
     }
 
     /* The top toolbar remains at the top */
     #top-toolbar {
       flex-shrink: 0;
+      background: #2a2a2a;
+      padding: 4px;
+    }
+    .divider {
+      display: inline-block;
+      width: 1px;
+      background: #444;
+      margin: 0 4px;
+      height: 24px;
     }
 
-    /* The main container for the sidebar + editor/preview */
+    /* Main container for sidebar + editor/preview */
     #main-split-container {
       display: flex;
-      flex: 1; /* fill leftover space after toolbar */
+      flex: 1;
       overflow: hidden;
     }
 
-    /* Sidebar remains fixed width or resizable via the vertical splitter */
+    /* Sidebar logic */
     #sidebar-container {
       background: #2a2a2a;
       overflow-y: auto;
@@ -49,40 +59,40 @@
     .sidebar-header {
       padding: 0.5rem;
       background: #3a3a3a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-header h2 {
+      margin: 0;
     }
 
-    /* The vertical splitter */
     #vertical-splitter {
       width: 4px;
       background: #444;
       cursor: col-resize;
     }
 
-    /* Editor + Preview container side by side => display: flex */
+    /* Editor + Preview => each 50% */
     #editor-preview-split {
       display: flex;
       flex: 1;
-      overflow: hidden; /* or auto if you prefer */
+      overflow: hidden;
     }
-
-    /* Editor panel => 50% width */
     #editor-panel {
       display: flex;
       flex-direction: column;
       width: 50%;
       flex: 1;
-      max-width: 50%; /* ensures it doesn't expand beyond 50% */
+      max-width: 50%;
       background: #1e1e1e;
       overflow: hidden;
     }
-
     .search-replace-container {
       flex-shrink: 0;
       padding: 4px;
       background: #2a2a2a;
     }
-
-    /* CodeMirror parent => fill remainder of editor-panel */
     #editor-cm {
       flex: 1;
       overflow: hidden;
@@ -92,24 +102,24 @@
       height: 100%;
     }
 
-    /* Preview panel => the other 50% */
     #preview-panel {
       width: 50%;
       flex: 1;
       max-width: 50%;
-      background: #1f1f1f; /* or #2a2a2a, choose your color */
+      background: #1f1f1f;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
     }
-    /* Improved preview styling */
     #preview-content {
       padding: 16px;
       color: #f0f0f0;
-      flex: 1; /* so it expands to fill panel */
+      flex: 1;
       font-family: "Segoe UI", Tahoma, sans-serif;
       line-height: 1.6;
     }
+
+    /* Improved heading, link, code styling, etc. */
     #preview-content h1,
     #preview-content h2,
     #preview-content h3,
@@ -119,7 +129,7 @@
       color: #fff;
       margin-top: 1.2rem;
       margin-bottom: 0.5rem;
-      border-bottom: 1px solid #444; /* subtle underline */
+      border-bottom: 1px solid #444;
       padding-bottom: 0.2rem;
     }
     #preview-content p {
@@ -130,7 +140,7 @@
       text-decoration: underline;
     }
     #preview-content a:hover {
-      color: #66aaff; /* a lighter blue on hover */
+      color: #66aaff;
     }
     #preview-content code {
       background: #333;
@@ -162,11 +172,102 @@
     #preview-content li {
       margin-bottom: 0.4rem;
     }
+
+    /* Context Menu */
+    .context-menu {
+      position: absolute;
+      display: none;
+      flex-direction: column;
+      background: #333;
+      color: #fff;
+      border: 1px solid #666;
+      min-width: 120px;
+      z-index: 9999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .context-menu-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .context-menu-item:hover {
+      background-color: #007acc;
+    }
+
+    /* Overlays for rename, table editor, etc. */
+    #rename-overlay,
+    #table-editor-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      z-index: 10000;
+    }
+    #rename-overlay-content,
+    .dialog-content {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      padding: 16px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #fff;
+    }
+    #rename-overlay-content input,
+    .dialog-content input {
+      background: #333;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+    #rename-overlay-buttons,
+    .dialog-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    /* Recent Files Overlay */
+    #recent-files-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    #recent-files-content {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      padding: 16px;
+      border-radius: 6px;
+      color: #fff;
+      max-height: 80vh;
+      overflow: auto;
+    }
+    #recent-files-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #recent-files-list li {
+      padding: 4px 0;
+      cursor: pointer;
+      border-bottom: 1px solid #444;
+    }
+    #recent-files-list li:hover {
+      background-color: #444;
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <!-- Top Toolbar with local PNG icons in /assets/ -->
+    <!-- Top Toolbar -->
     <div id="top-toolbar">
       <!-- Project / File icons -->
       <button id="btn-new" title="New Project">
@@ -187,14 +288,14 @@
       <button id="btn-export-html" title="Export to HTML">
         <img src="./assets/export.png" alt="Export HTML" />
       </button>
-      <!-- "Play" button for preview -->
+      <!-- "Play" preview button -->
       <button id="btn-play" title="Preview in Browser">
         <img src="./assets/play.png" alt="Preview in Browser" />
       </button>
 
       <div class="divider"></div>
 
-      <!-- Formatting icons (colorful) -->
+      <!-- Formatting icons -->
       <button id="btn-bold" title="Bold">
         <img src="./assets/bold.png" alt="Bold" />
       </button>
@@ -238,7 +339,7 @@
       <button id="btn-spellcheck" title="Spell Check">
         <img src="./assets/spellcheck.png" alt="Spell Check" />
       </button>
-      
+
       <!-- Settings button on the far right -->
       <div class="divider"></div>
       <button id="btn-settings" title="Settings">
@@ -300,7 +401,7 @@
   </div>
 
   <!-- Table Editor Overlay -->
-  <div id="table-editor-overlay" class="dialog-overlay">
+  <div id="table-editor-overlay">
     <div class="dialog-content">
       <h2>Table Editor</h2>
       <label>Rows: <input type="number" id="table-rows" min="1" value="2"></label>
@@ -312,6 +413,15 @@
     </div>
   </div>
 
+  <!-- Recent Files Overlay -->
+  <div id="recent-files-overlay">
+    <div id="recent-files-content">
+      <h2>Recent Files</h2>
+      <ul id="recent-files-list"></ul>
+      <button id="close-recent">Close</button>
+    </div>
+  </div>
+
   <!-- CodeMirror JS + Markdown mode (CDN) -->
   <script 
     src="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/lib/codemirror.js">
@@ -319,7 +429,8 @@
   <script
     src="https://cdn.jsdelivr.net/npm/codemirror@5.65.10/mode/markdown/markdown.js">
   </script>
-  <!-- The updated renderer.js (unchanged except for codeMirror usage) -->
+
+  <!-- The updated renderer.js below -->
   <script src="renderer.js"></script>
 </body>
 </html>

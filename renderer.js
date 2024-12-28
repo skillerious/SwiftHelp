@@ -1,17 +1,15 @@
 /********************************************************************
  * renderer.js
- * Ensures links in the preview open in an external browser
- * (shell.openExternal), preserving user’s content/work.
+ * Full code ensuring Insert Table button opens the overlay,
+ * and Apply/Cancel work, plus CodeMirror, external link handling, etc.
  ********************************************************************/
 console.log('[Renderer] renderer.js loaded');
 
-const { ipcRenderer, shell } = require('electron'); 
-// Note: we also destructure "shell" from electron to open external links
-
+const { ipcRenderer, shell } = require('electron');
 const path = require('path');
 const marked = require('marked');
 
-// Code highlighting config
+// Marked config for highlight
 marked.setOptions({
   highlight(code, lang) {
     if (window.hljs) {
@@ -25,7 +23,7 @@ marked.setOptions({
 });
 marked.use({ mangle: false, headerIds: false });
 
-// Sections array
+// Our sections array
 let sections = [
   { title: 'Introduction', content: '# Introduction\n\nHello world!' }
 ];
@@ -33,7 +31,7 @@ let currentSectionIndex = 0;
 let currentFilePath = null;
 let isProjectFile = false;
 
-// We'll store user-chosen widths, pinned sidebar, autoSave, etc.
+// We'll store user-chosen widths, pinned, etc.
 let sidebarWidth = 300;
 let autoSave = false;
 let pinnedSidebar = false;
@@ -47,66 +45,67 @@ let autoSaveTimer = null;
 const AUTO_SAVE_DELAY = 2000;
 
 // Grab references
-const previewContent = document.getElementById('preview-content');
-const sectionsList = document.getElementById('sections-list');
+const previewContent   = document.getElementById('preview-content');
+const sectionsList     = document.getElementById('sections-list');
 const sidebarContainer = document.getElementById('sidebar-container');
 const verticalSplitter = document.getElementById('vertical-splitter');
 
 // Toolbar references
-const btnNew = document.getElementById('btn-new');
-const btnOpen = document.getElementById('btn-open');
-const btnSave = document.getElementById('btn-save');
-const btnExportHtml = document.getElementById('btn-export-html');
-const btnExportPdf = document.getElementById('btn-export-pdf');
-const btnPlay = document.getElementById('btn-play');
-const btnSettings = document.getElementById('btn-settings');
+const btnNew         = document.getElementById('btn-new');
+const btnOpen        = document.getElementById('btn-open');
+const btnSave        = document.getElementById('btn-save');
+const btnExportHtml  = document.getElementById('btn-export-html');
+const btnExportPdf   = document.getElementById('btn-export-pdf');
+const btnPlay        = document.getElementById('btn-play');
+const btnSettings    = document.getElementById('btn-settings');
 
-const btnAddSection = document.getElementById('btn-add-section');
-const btnSearch = document.getElementById('btn-search');
-const btnReplace = document.getElementById('btn-replace');
-const searchInput = document.getElementById('search-input');
-const replaceInput = document.getElementById('replace-input');
+const btnAddSection  = document.getElementById('btn-add-section');
+const btnSearch      = document.getElementById('btn-search');
+const btnReplace     = document.getElementById('btn-replace');
+const searchInput    = document.getElementById('search-input');
+const replaceInput   = document.getElementById('replace-input');
 
-const btnBold = document.getElementById('btn-bold');
-const btnItalic = document.getElementById('btn-italic');
-const btnUnderline = document.getElementById('btn-underline');
-const btnBulletList = document.getElementById('btn-bullet-list');
-const btnNumberList = document.getElementById('btn-number-list');
-const btnInlineCode = document.getElementById('btn-inline-code');
-const btnInsertImg = document.getElementById('btn-insert-img');
-const btnInsertLink = document.getElementById('btn-insert-link');
+const btnBold        = document.getElementById('btn-bold');
+const btnItalic      = document.getElementById('btn-italic');
+const btnUnderline   = document.getElementById('btn-underline');
+const btnBulletList  = document.getElementById('btn-bullet-list');
+const btnNumberList  = document.getElementById('btn-number-list');
+const btnInlineCode  = document.getElementById('btn-inline-code');
+const btnInsertImg   = document.getElementById('btn-insert-img');
+const btnInsertLink  = document.getElementById('btn-insert-link');
 const btnInsertTable = document.getElementById('btn-insert-table');
-const btnInsertCode = document.getElementById('btn-insert-code');
-const btnSpellcheck = document.getElementById('btn-spellcheck');
-const btnHeading = document.getElementById('btn-heading');
-const btnQuote = document.getElementById('btn-quote');
+const btnInsertCode  = document.getElementById('btn-insert-code');
+const btnSpellcheck  = document.getElementById('btn-spellcheck');
+const btnHeading     = document.getElementById('btn-heading');
+const btnQuote       = document.getElementById('btn-quote');
 
+// Advanced features
 const btnRecentFiles = document.getElementById('btn-recent-files');
-const chkAutoSave = document.getElementById('chk-auto-save');
-const btnPinSidebar = document.getElementById('btn-pin-sidebar');
+const chkAutoSave    = document.getElementById('chk-auto-save');
+const btnPinSidebar  = document.getElementById('btn-pin-sidebar');
 
 // Overlays
-const ctxMenu = document.getElementById('section-context-menu');
-const ctxRename = document.getElementById('ctx-rename');
-const ctxDuplicate = document.getElementById('ctx-duplicate');
-const ctxDelete = document.getElementById('ctx-delete');
+const ctxMenu       = document.getElementById('section-context-menu');
+const ctxRename     = document.getElementById('ctx-rename');
+const ctxDuplicate  = document.getElementById('ctx-duplicate');
+const ctxDelete     = document.getElementById('ctx-delete');
 let contextSectionIndex = null;
 
 const renameOverlay = document.getElementById('rename-overlay');
-const renameInput = document.getElementById('rename-input');
-const renameSave = document.getElementById('rename-save');
-const renameCancel = document.getElementById('rename-cancel');
+const renameInput   = document.getElementById('rename-input');
+const renameSave    = document.getElementById('rename-save');
+const renameCancel  = document.getElementById('rename-cancel');
 
 const recentFilesOverlay = document.getElementById('recent-files-overlay');
-const recentFilesContent = document.getElementById('recent-files-content');
-const recentFilesList = document.getElementById('recent-files-list');
-const closeRecent = document.getElementById('close-recent');
+const recentFilesList    = document.getElementById('recent-files-list');
+const closeRecent        = document.getElementById('close-recent');
 
+// Table Editor
 const tableEditorOverlay = document.getElementById('table-editor-overlay');
-const tableEditorApply = document.getElementById('table-editor-apply');
-const tableEditorCancel = document.getElementById('table-editor-cancel');
-const tableRowsInput = document.getElementById('table-rows');
-const tableColsInput = document.getElementById('table-cols');
+const tableEditorApply   = document.getElementById('table-editor-apply');
+const tableEditorCancel  = document.getElementById('table-editor-cancel');
+const tableRowsInput     = document.getElementById('table-rows');
+const tableColsInput     = document.getElementById('table-cols');
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // init => load settings + create CodeMirror
@@ -128,7 +127,7 @@ function init() {
       console.log('[Renderer] load-settings error:', err);
     })
     .finally(() => {
-      // Create CodeMirror
+      // Create CodeMirror instance
       codeMirrorEditor = CodeMirror(document.getElementById('editor-cm'), {
         value: sections[currentSectionIndex].content || '',
         mode: 'markdown',
@@ -146,7 +145,7 @@ function init() {
           if (autoSaveTimer) clearTimeout(autoSaveTimer);
           autoSaveTimer = setTimeout(() => {
             tryAutoSave();
-          }, AUTO_SAVE_DELAY);
+          }, 2000);
         }
       });
 
@@ -173,7 +172,7 @@ function applyPinnedSidebar() {
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// renderMarkdown => parse current content
+// renderMarkdown => parse & set preview HTML
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function renderMarkdown() {
   const raw = sections[currentSectionIndex].content || '';
@@ -181,18 +180,17 @@ function renderMarkdown() {
   if (previewContent) {
     previewContent.innerHTML = html;
 
-    // highlight code blocks if needed
+    // highlight code blocks
     if (window.hljs) {
       previewContent.querySelectorAll('pre code').forEach(block => {
         window.hljs.highlightBlock(block);
       });
     }
 
-    // 1) after setting the innerHTML, intercept link clicks
+    // open links externally
     previewContent.querySelectorAll('a').forEach(linkEl => {
       linkEl.addEventListener('click', (evt) => {
         evt.preventDefault();
-        // open link in external browser => preserve app state
         shell.openExternal(linkEl.href);
       });
     });
@@ -200,7 +198,7 @@ function renderMarkdown() {
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Update sections list
+// Update sections list in sidebar
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function updateSectionsList() {
   sectionsList.innerHTML = '';
@@ -269,7 +267,9 @@ function updateSectionsList() {
   });
 }
 
-// auto-save
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// auto-save logic
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function tryAutoSave() {
   if (!currentFilePath) {
     console.log('[Renderer] Auto-save skipped - no file path yet');
@@ -295,7 +295,9 @@ btnAddSection?.addEventListener('click', () => {
   updateSectionsList();
 });
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Search & Replace
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 btnSearch?.addEventListener('click', () => {
   const searchTerm = (searchInput.value || '').trim();
   if (!searchTerm) return;
@@ -306,6 +308,7 @@ btnSearch?.addEventListener('click', () => {
   codeMirrorEditor.setValue(replaced);
   renderMarkdown();
 
+  // highlight in rendered HTML
   const rawHTML = previewContent.innerHTML;
   const finalHTML = rawHTML.replace(/<<HIGHLIGHT>>(.*?)<<ENDHIGHLIGHT>>/g, (m, g1) => {
     return `<span class="highlight">${g1}</span>`;
@@ -327,7 +330,9 @@ btnReplace?.addEventListener('click', () => {
   renderMarkdown();
 });
 
-// Insert text at CodeMirror cursor
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Insert text into CodeMirror
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function insertIntoEditor(mdText) {
   const doc = codeMirrorEditor.getDoc();
   const cursor = doc.getCursor();
@@ -336,32 +341,63 @@ function insertIntoEditor(mdText) {
   renderMarkdown();
 }
 
-btnBold?.addEventListener('click', () => insertIntoEditor('**Bold**'));
-btnItalic?.addEventListener('click', () => insertIntoEditor('_Italic_'));
+// Formatting / Insert item buttons
+btnBold?.addEventListener('click',      () => insertIntoEditor('**Bold**'));
+btnItalic?.addEventListener('click',    () => insertIntoEditor('_Italic_'));
 btnUnderline?.addEventListener('click', () => insertIntoEditor('<u>Underline</u>'));
-btnBulletList?.addEventListener('click', () => insertIntoEditor('- Item 1\n- Item 2\n- Item 3\n'));
-btnNumberList?.addEventListener('click', () => insertIntoEditor('1. First\n2. Second\n3. Third\n'));
-btnInlineCode?.addEventListener('click', () => insertIntoEditor('`inline code`'));
-btnHeading?.addEventListener('click', () => insertIntoEditor('\n# Heading 1\n'));
-btnQuote?.addEventListener('click', () => insertIntoEditor('> Blockquote goes here\n'));
+btnBulletList?.addEventListener('click',() => insertIntoEditor('- Item 1\n- Item 2\n- Item 3\n'));
+btnNumberList?.addEventListener('click',() => insertIntoEditor('1. First\n2. Second\n3. Third\n'));
+btnInlineCode?.addEventListener('click',() => insertIntoEditor('`inline code`'));
+btnHeading?.addEventListener('click',   () => insertIntoEditor('\n# Heading 1\n'));
+btnQuote?.addEventListener('click',     () => insertIntoEditor('> Blockquote goes here\n'));
 
-btnInsertImg?.addEventListener('click', () => {
-  insertIntoEditor('![alt text](http://placehold.it/200 "Image Title")');
-});
-btnInsertLink?.addEventListener('click', () => {
-  insertIntoEditor('[Link Text](http://example.com)');
-});
-btnInsertTable?.addEventListener('click', () => {
-  tableEditorOverlay.style.display = 'flex';
-});
-btnInsertCode?.addEventListener('click', () => {
-  insertIntoEditor("```\n// Your code here\nconsole.log('Hello!');\n```");
-});
+btnInsertImg?.addEventListener('click',  () => insertIntoEditor('![alt text](http://placehold.it/200 "Image Title")'));
+btnInsertLink?.addEventListener('click', () => insertIntoEditor('[Link Text](http://example.com)'));
+btnInsertCode?.addEventListener('click', () => insertIntoEditor("```\n// Your code here\nconsole.log('Hello!');\n```"));
 btnSpellcheck?.addEventListener('click', () => {
   alert('Spell check not implemented.');
 });
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Insert Table => show table editor overlay
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+btnInsertTable?.addEventListener('click', () => {
+  tableEditorOverlay.style.display = 'flex';
+});
+// Table Editor => "Apply" & "Cancel"
+tableEditorApply?.addEventListener('click', () => {
+  const rows = parseInt(tableRowsInput.value, 10) || 2;
+  const cols = parseInt(tableColsInput.value, 10) || 2;
+
+  // Build the table MD
+  let tableMD = '|';
+  // header
+  for (let c = 0; c < cols; c++) {
+    tableMD += ` Col${c+1} |`;
+  }
+  tableMD += '\n|';
+  for (let c = 0; c < cols; c++) {
+    tableMD += '------|';
+  }
+  for (let r = 0; r < rows; r++) {
+    tableMD += '\n|';
+    for (let c = 0; c < cols; c++) {
+      tableMD += ' Data |';
+    }
+  }
+
+  // Insert
+  insertIntoEditor(tableMD + '\n');
+  // hide overlay
+  tableEditorOverlay.style.display = 'none';
+});
+tableEditorCancel?.addEventListener('click', () => {
+  tableEditorOverlay.style.display = 'none';
+});
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Context menu rename/duplicate/delete
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 document.addEventListener('click', () => {
   if (ctxMenu && ctxMenu.style.display === 'flex') {
     ctxMenu.style.display = 'none';
@@ -376,7 +412,7 @@ ctxRename?.addEventListener('click', () => {
 ctxDuplicate?.addEventListener('click', () => {
   if (contextSectionIndex == null) return;
   const original = sections[contextSectionIndex];
-  const newSec = { title: original.title + ' (Copy)', content: original.content };
+  const newSec   = { title: original.title + ' (Copy)', content: original.content };
   sections.splice(contextSectionIndex + 1, 0, newSec);
   currentSectionIndex = contextSectionIndex + 1;
   codeMirrorEditor.setValue(newSec.content || '');
@@ -414,7 +450,9 @@ renameCancel?.addEventListener('click', () => {
   contextSectionIndex = null;
 });
 
-// vertical splitter => save new sidebar width
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Vertical splitter => drag to resize sidebar
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 let isDraggingVert = false;
 verticalSplitter?.addEventListener('mousedown', () => {
   if (pinnedSidebar) return;
@@ -435,7 +473,9 @@ document.addEventListener('mouseup', () => {
   }
 });
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // File handling
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 btnOpen?.addEventListener('click', () => {
   ipcRenderer.send('open-file-dialog');
 });
@@ -463,17 +503,12 @@ ipcRenderer.on('open-file-result', (event, data) => {
   }
   ipcRenderer.send('update-recent-files', currentFilePath);
 });
+
 btnSave?.addEventListener('click', () => {
   if (sections.length > 1) {
-    ipcRenderer.send('save-file-dialog', {
-      isProject: true,
-      sections
-    });
+    ipcRenderer.send('save-file-dialog', { isProject: true, sections });
   } else {
-    ipcRenderer.send('save-file-dialog', {
-      isProject: false,
-      content: sections[0].content
-    });
+    ipcRenderer.send('save-file-dialog', { isProject: false, content: sections[0].content });
   }
 });
 ipcRenderer.on('save-file-result', (event, data) => {
@@ -519,12 +554,14 @@ ipcRenderer.on('export-pdf-result', (event, data) => {
 
 // Menu triggers from main
 ipcRenderer.on('menu-new-project', () => { btnNew?.click(); });
-ipcRenderer.on('menu-open-file', () => { btnOpen?.click(); });
-ipcRenderer.on('menu-save-file', () => { btnSave?.click(); });
+ipcRenderer.on('menu-open-file',   () => { btnOpen?.click(); });
+ipcRenderer.on('menu-save-file',   () => { btnSave?.click(); });
 ipcRenderer.on('menu-export-html', () => { btnExportHtml?.click(); });
-ipcRenderer.on('menu-export-pdf', () => { btnExportPdf?.click(); });
+ipcRenderer.on('menu-export-pdf',  () => { btnExportPdf?.click(); });
 
-// Recent Files
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Recent Files Overlay
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 btnRecentFiles?.addEventListener('click', () => {
   recentFilesList.innerHTML = '';
   if (recentFiles.length === 0) {
