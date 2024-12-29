@@ -75,16 +75,19 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 ## Screenshots
 
 1. **Main Editor Window**  
-   ![Main Editor Preview](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/mainscreen1.png)
+   ![Main Editor Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/SwinftHelpEditor.png)
 
 2. **Draggable Sections & Context Menu**  
-   *(Example of a section item with a `drag.png` handle and a right-click menu.)*  
+   ![Main Editor Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/SwiftHelpSidebar.png)  
 
 3. **Exported HTML**  
    ![Exported HTML Preview](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/exported.png)
 
-4. **Exported HTML Sidebar**  
-   ![settings.json Example](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/exportedsidebar.png)
+4. **Exported HTML - Navigation**  
+   ![Exported HTML Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/exportedsidebar.png)
+
+5. **Settings**  
+   ![settings.json Example](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/SwiftHelpSettings.png)
 
 ---
 
