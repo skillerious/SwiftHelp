@@ -1,7 +1,7 @@
 
 # SwiftHelp
 
-SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Skillerious**](https://github.com/Skillerious). It enables you to write and organize documentation in multiple sections, edit in Markdown, preview changes in real time, and then export to HTML or PDF—complete with features like **syntax highlighting**, **auto-save**, **recent files**, and **pinned sidebars**.
+SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Skillerious**](https://github.com/Skillerious). It enables you to write and organize documentation in multiple sections, edit in Markdown, preview changes in real time, and export to HTML or PDF—complete with features like **syntax highlighting**, **auto-save**, **recent files**, **pinned sidebars**, **draggable sections**, and a **context menu** to rename/duplicate/delete sections seamlessly.
 
 ---
 
@@ -18,6 +18,7 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
    - [Markdown Editing](#markdown-editing)  
    - [Auto Save & Recent Files](#auto-save--recent-files)  
    - [Pinned Sidebar](#pinned-sidebar)  
+   - [Draggable Sections & Context Menu](#draggable-sections--context-menu)  
    - [Export to HTML/PDF](#export-to-htmlpdf)  
    - [Light/Dark Mode](#lightdark-mode)  
 5. [File Structure](#file-structure)  
@@ -33,45 +34,57 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 ## Features
 
 - **Multi-Section Editor**  
-  Create numerous sections in a single workspace. Add new sections easily, rename, or reorder them to keep your help docs neatly structured.
+  Create numerous sections in a single workspace. Add new sections, rename them, reorder them by **dragging** a small handle, or remove them entirely.
 
 - **Markdown Preview**  
-  Edit your content in Markdown, and preview changes instantly.  
+  Edit your content in Markdown and preview changes instantly.  
   *Supports tables, links, images, code blocks, lists, and more.*
 
 - **Syntax Highlighting**  
   Built-in code syntax highlighting (via [highlight.js](https://highlightjs.org/)) for an improved reading experience in the preview panel.
 
+- **Draggable Sections**  
+  Each section in the sidebar features a small **drag icon** (`drag.png`), indicating you can press and drag the entire section item to reorder it. A context menu (right-click) also provides quick actions like rename, duplicate, or delete.
+
+- **Context Menu**  
+  Right-click any section to “Rename,” “Duplicate,” or “Delete.” A rename overlay and duplication logic keep your project flexible.
+
 - **Export to HTML**  
   Generate a slick, offcanvas-style HTML file with next/prev navigation, search highlighting, and a pinned title bar.
 
 - **Export to PDF**  
-  Save your final compiled help sections as a PDF—great for emailing or offline distribution.
+  Save your final compiled help sections as a PDF—ideal for emailing or offline distribution.
 
 - **Auto-Save**  
   An optional auto-save feature triggers a short time after the last keystroke, ensuring you don’t lose work.
 
 - **Recent Files**  
-  Keep track of up to five recently opened files/projects, so you can quickly jump back into your docs.
+  Keep track of up to five recently opened files/projects, so you can quickly jump back into your docs. Data is stored in `settings.json`.
 
 - **Pinned Sidebar**  
-  Fix the sidebar’s width and prevent unintentional resizing when you want a consistent layout.
+  Fix the sidebar’s width and prevent unintentional resizing when you want a consistent layout. When pinned, the vertical splitter is disabled.
 
 - **Light/Dark Mode**  
-  Switch between a dark theme (ideal for late-night writing sessions) and a bright, modern light theme.
+  Switch between a dark theme (great for nighttime writing) and a bright, modern light theme.  
+
+- **Scroll Sync**  
+  Editor and Preview panels remain in sync while scrolling—jump directly to the corresponding preview location as you scroll in the editor, and vice versa.
 
 ---
 
 ## Screenshots
 
 1. **Main Editor Window**  
-   ![Main Editor Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/mainscreen1.png)
+   ![Main Editor Preview](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/mainscreen1.png)
 
-2. **Exported HTML**  
-   ![Exported HTML Preview](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/exported.png)
+2. **Draggable Sections & Context Menu**  
+   *(Example of a section item with a `drag.png` handle and a right-click menu.)*  
 
-3. **Exported HTML Sidebar**  
-   ![settings.json Example](https://github.com/skillerious/SwiftHelp/blob/main/assets/screenshots/exportedsidebar.png)
+3. **Exported HTML**  
+   ![Exported HTML Preview](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/exported.png)
+
+4. **Exported HTML Sidebar**  
+   ![settings.json Example](https://github.com/Skillerious/SwiftHelp/blob/main/assets/screenshots/exportedsidebar.png)
 
 ---
 
@@ -94,7 +107,7 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
    ```bash
    npm install
    ```
-   This will fetch **Electron**, **marked**, and any other needed libraries as declared in `package.json`.
+   This will fetch **Electron**, **marked**, **highlight.js**, and other necessary libraries.
 
 ### Running the App
 
@@ -108,7 +121,7 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
   ```bash
   npm run build
   ```
-  *(If you add a script or use a tool like [electron-builder](https://www.electron.build/) or [electron-packager](https://github.com/electron/electron-packager).)*
+  *(If you’ve configured [electron-builder](https://www.electron.build/) or [electron-packager](https://github.com/electron/electron-packager).)*
 
 ---
 
@@ -117,114 +130,105 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 ### Section Management
 
 - **Add Section**: Click the **+ Add Section** button in the sidebar.  
-- **Rename**: Right-click a section title and choose *Rename*.  
+- **Rename**: Right-click a section title and choose *Rename*; an overlay prompts you for the new name.  
 - **Duplicate**: Right-click and choose *Duplicate* to quickly copy a section.  
-- **Delete**: Remove a section you no longer need. The editor will shift to another section if the current one is removed.
+- **Delete**: Remove any section you no longer need. If you remove the currently active section, SwiftHelp shifts focus to another existing section.  
+- **Reorder**: Press and hold the **drag handle** icon (small PNG named `drag.png`) on each section to drag the section item up or down the list.
 
 ### Markdown Editing
 
-1. Write text in the **Editor** panel (on the left or top, depending on your screen size).  
+1. Write text in the **Editor** panel (on the left side).  
 2. SwiftHelp uses [**marked**](https://github.com/markedjs/marked) to parse your Markdown into HTML in real time.  
-3. You can insert *formatted text*, *tables*, *lists*, *links*, or *images* using the toolbar or by typing Markdown syntax directly.
+3. The preview (right side) shows exactly how your docs will look—complete with **scroll sync** to stay aligned with your editing.
 
 ### Auto Save & Recent Files
 
-- **Auto Save**: Toggle the “Auto Save” checkbox in the top toolbar. When enabled, any change to the text will trigger an auto-save after a small delay.  
-- **Recent Files**: SwiftHelp tracks the last five files or projects you opened. Click the **Recent** button (clock icon) to reopen them. The data is stored in `settings.json`.
+- **Auto Save**: Toggle the “Auto Save” checkbox (in the settings or top toolbar). Changes to the text will trigger an auto-save after a small delay.  
+- **Recent Files**: Up to five files/projects are tracked in `settings.json`. Click the **Recent** button to open that overlay and load them quickly.
 
 ### Pinned Sidebar
 
-- When “Pin Sidebar” is active, the vertical splitter is hidden, preventing accidental resizing. You can still scroll the sections list, but you can’t drag the width.
+- When “Pin Sidebar” is active, the vertical splitter is hidden. The sidebar’s width remains fixed, so you won’t resize it accidentally.
+
+### Draggable Sections & Context Menu
+
+- **Drag** any section item by its **`drag.png`** icon. The underlying code (in `renderer.js`) uses the `dragstart`, `dragover`, `drop`, and `dragend` events to reorder the sections array.  
+- **Context Menu** (right-click):
+  - **Rename**: Brings up an overlay to rename the section.  
+  - **Duplicate**: Copies that section’s title and content.  
+  - **Delete**: Removes that section from the project.
 
 ### Export to HTML/PDF
 
-- **HTML**: Go to `File -> Export to HTML` or press **CmdOrCtrl+E** to choose where to save the `.html` file. SwiftHelp will generate an offcanvas-based layout with your content.  
-- **PDF**: Similarly, `File -> Export to PDF` or press **CmdOrCtrl+Shift+P**. The output PDF file includes your current sections in a single, linear document.
+- **HTML**: Go to `File -> Export to HTML` or press **CmdOrCtrl+E**, choose a file path. SwiftHelp then calls `buildEnhancedDarkHtml()` in `main.js` to produce a self-contained HTML doc with your sections, next/prev navigation, and optional search.  
+- **PDF**: Similarly, `File -> Export to PDF` or press **CmdOrCtrl+Shift+P`. SwiftHelp merges your sections into a PDF (placeholder or real PDF logic if you add one).
 
 ### Light/Dark Mode
 
-- Use the **Light Mode** switch in the top toolbar to invert the theme for the entire editor.  
-- This preference does not (by default) affect the exported HTML’s theme. If you want to unify that, you can customize the code in `buildEnhancedDarkHtml()` in `main.js`.
+- Click the **Light Mode** switch in settings (or if you’ve bound it to a toolbar button). You can store that preference in `settings.json`.  
+- The exported HTML has its own stylings, but you can unify them or choose a dark export theme if desired.
 
 ---
 
 ## File Structure
 
-Here’s a quick look at the main files:
+A typical layout:
 
-- **main.js**  
-  - The Electron main process. Creates the `BrowserWindow`, sets up application menus, handles open/save dialogs, merges user settings, and exports HTML/PDF.
-
-- **index.html**  
-  - The primary UI layout with toolbar buttons, side-by-side editor/preview, context menus, rename overlays, etc.
-
-- **renderer.js**  
-  - All the client-side logic for the multi-section approach, auto-save, pinned sidebars, searching, etc. Runs in the browser (renderer) process.
-
-- **style.css**  
-  - Central styling for pinned sidebars, dark/light theme toggles, scrollbars, overlays, etc.
-
-- **assets/**  
-  - PNG icons for the toolbar (e.g., `new.png`, `open.png`, `save.png`, etc.).
-
-- **settings.json**  
-  - Auto-generated. Stores the user’s preferences, such as `sidebarWidth`, `recentFiles`, etc.
-
-*(Additional docs or configuration files may also be present if you add them.)*
+```
+SwiftHelp/
+  ├── main.js            // Electron main process (creates BrowserWindow, menus)
+  ├── index.html         // Primary UI layout (toolbar, side-by-side editor/preview)
+  ├── renderer.js        // In-app logic: sections array, auto-save, context menu, etc.
+  ├── style.css          // Central styling (scrollbars, pinned sidebars, overlays)
+  ├── package.json       // Project metadata & scripts
+  ├── assets/            // PNG icons (new.png, open.png, save.png, drag.png, etc.)
+  ├── templates/         // Possibly your 'Dark-Template.html' for exported HTML
+  └── settings.json      // Auto-generated for user preferences
+```
 
 ---
 
 ## Packaging / Distribution
 
-To distribute SwiftHelp as a standalone application, consider using:
+Use [**electron-builder**](https://www.electron.build/) or [**electron-packager**](https://github.com/electron/electron-packager) to generate installers for Windows, macOS, or Linux:
 
-- [**electron-builder**](https://www.electron.build/):  
-  *Generates installers for Windows (.exe), macOS (.dmg/.pkg), and Linux (.deb/.AppImage).*
-
-- [**electron-packager**](https://github.com/electron/electron-packager):  
-  *Quickly bundles your app into an executable folder for various platforms.*
-
-Steps might include:
-
-1. `npm install --save-dev electron-builder` (or your chosen tool).  
-2. Add a script in your `package.json`, for example:  
+1. `npm install --save-dev electron-builder`  
+2. Add a script in `package.json`:
    ```json
    {
      "scripts": {
        "build": "electron-builder"
      }
    }
-   ```  
-3. Run `npm run build` to produce your distribution files.
+   ```
+3. `npm run build` => produces ready-to-distribute binaries.
 
-Check each tool’s documentation for further instructions on code signing, auto-updates, advanced config, etc.
+Check each tool’s docs for code signing, auto-updates, advanced configs, etc.
 
 ---
 
 ## Advanced Customization
 
-1. **Spell Check**  
-   - Currently, SwiftHelp displays a “Spell check not implemented” alert. Integrate libraries like [electron-spellchecker](https://github.com/electron-userland/electron-spellchecker) if you want inline or context-based checks.
+1. **Spell Check**:  
+   The `btnSpellcheck` triggers a placeholder alert. Integrate something like [**electron-spellchecker**](https://github.com/electron-userland/electron-spellchecker) if you need real-time or context-based checking.
 
-2. **Multi-User Collaboration**  
-   - Combine with a version control approach (Git) or a shared network folder for collaborative editing. Possibly add prompts for merging conflicts.
+2. **Multi-User Collaboration**:  
+   You could store `.json` projects in a shared folder or use Git for version control. Merging conflicts in Markdown is typically straightforward, but you might add an in-app conflict resolution system if needed.
 
-3. **Theming**  
-   - Extend the existing theme toggle to also export in dark mode if desired. Tweak `buildEnhancedDarkHtml()` for a complete dark-mode export.
+3. **Theming**:  
+   Extend the existing light/dark mode to your exported HTML, or create your own CSS override in `buildEnhancedDarkHtml()` in `main.js`.
 
-4. **Search All Sections**  
-   - The current code highlights matches only in the active section. You can enhance it by scanning all sections and then listing those matches in a side panel.
+4. **Search All Sections**:  
+   Currently, we highlight only in the active section. Expand that to a global search if you want a single search box scanning every section.
 
 ---
 
 ## Known Issues / Limitations
 
-- **Auto Save File Path**: If you have never manually saved a new project, auto-save can’t proceed. You must “Save As” at least once.  
-- **Large Projects**: For extremely large `.json` files or many sections, performance might degrade without further optimization.  
-- **Spell Check**: Not implemented. The button is purely a placeholder.  
-- **No Undo for Deletions**: Deleting a section is permanent—there’s no built-in undo/redo for that action.  
-
-If you encounter other issues, please create a new issue in the [GitHub repository](https://github.com/Skillerious/SwiftHelp/issues).
+- **No “Undo” for Section Deletions**: Once you delete a section, it’s removed from the array. If you need to revert, you must re-add it manually or restore from a saved project.  
+- **Auto-Save Without File Path**: If you haven’t “Save As” at least once, auto-save can’t proceed.  
+- **Spell Check**: Not implemented.  
+- **Large Projects**: With extremely large `.json` files or hundreds of sections, performance might degrade without further optimization or lazy-loading.
 
 ---
 
@@ -234,15 +238,15 @@ If you encounter other issues, please create a new issue in the [GitHub reposito
 2. Create your feature branch: `git checkout -b feature/myNewFeature`.  
 3. Commit changes: `git commit -m "Add new feature"`.  
 4. Push branch: `git push origin feature/myNewFeature`.  
-5. **Open a Pull Request** explaining your changes.  
+5. **Open a Pull Request** describing your improvements.  
 
-We welcome bug fixes, feature suggestions, and any helpful documentation.
+We welcome bug fixes, new features, and updates to documentation.
 
 ---
 
 ## License
 
-*(Choose a license that suits your project, e.g., [MIT License](https://opensource.org/licenses/MIT)):*
+*(Assuming MIT, or whichever you prefer)*
 
 ```
 MIT License
