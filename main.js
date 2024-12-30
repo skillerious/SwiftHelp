@@ -1,13 +1,9 @@
 /********************************************************************
  * main.js
- * Electron's main process: creates BrowserWindow, sets up menus,
- * handles open/save/export, merges settings logic (recent files,
- * pinned sidebar, auto-save, etc.).
- *
- * Now includes:
- *   - open-settings => spawns settings.html
- *   - get-app-settings / save-app-settings
- *   - docTitle support in buildEnhancedDarkHtml()
+ * Electron's main process: includes:
+ *  - globalIsDirty to track unsaved changes
+ *  - mainWindow.on('close', ...) => prompts user if unsaved
+ *  - plus existing logic for open/save/export, etc.
  ********************************************************************/
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
@@ -15,8 +11,11 @@ const fs = require('fs');
 const os = require('os');
 const marked = require('marked');
 
+// We'll store if user has unsaved changes globally
+let globalIsDirty = false;
+
 let mainWindow;
-let settingsWindow = null; // We'll store reference to settings window
+let settingsWindow = null; // reference to optional settings window
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -31,8 +30,32 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
+  // Immediately maximize after creation
+  mainWindow.maximize();
+
   mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
     console.log(`[Renderer Log] ${message} (line: ${line}, source: ${sourceId})`);
+  });
+
+  // Instead of will-prevent-unload, handle close event directly
+  mainWindow.on('close', (e) => {
+    if (globalIsDirty) {
+      const choice = dialog.showMessageBoxSync({
+        type: 'question',
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Discard or Cancel?',
+        buttons: [
+          'Discard', // index 0 => close
+          'Cancel'   // index 1 => stay open
+        ],
+        defaultId: 1, // highlight "Cancel"
+        cancelId: 1
+      });
+      // If user picks index 1 => "Cancel", prevent closing
+      if (choice === 1) {
+        e.preventDefault();
+      }
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -71,9 +94,6 @@ function createMenu() {
           label: 'Export to HTML',
           accelerator: 'CmdOrCtrl+E',
           click: () => {
-            // For docTitle, you might do:
-            // mainWindow.webContents.send('menu-export-html', { docTitle: 'Custom Title' });
-            // Or just the simpler approach:
             mainWindow.webContents.send('menu-export-html');
           }
         },
@@ -89,11 +109,13 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+B',
           click: async () => {
             try {
+              console.log('[Main] Asking renderer for sectionsData...');
               const sectionsData = await mainWindow.webContents.executeJavaScript('window.getCurrentSectionsData()');
               if (!sectionsData) {
                 console.log('[Main] No sectionsData returned for preview in browser.');
                 return;
               }
+              console.log('[Main] sectionsData obtained. Sending preview-in-browser...');
               previewInBrowser(sectionsData);
             } catch (err) {
               console.log('[Main] Error retrieving sectionsData for preview:', err);
@@ -103,8 +125,53 @@ function createMenu() {
         { type: 'separator' },
         { role: 'quit' }
       ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Documentation',
+          click: () => {
+            shell.openExternal('https://yoursite.example.com/docs');
+          }
+        },
+        {
+          label: 'About SwiftHelp',
+          click: () => {
+            dialog.showMessageBox({
+              type: 'info',
+              title: 'About SwiftHelp',
+              message: 'SwiftHelp v1.0 - A Help Authoring Tool powered by Electron'
+            });
+          }
+        }
+      ]
     }
-    // Additional menus if needed...
   ];
 
   const menu = Menu.buildFromTemplate(template);
@@ -117,9 +184,7 @@ app.whenReady().then(() => {
   createMenu();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
@@ -128,7 +193,7 @@ app.on('window-all-closed', () => {
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// "open-settings" => spawn a settings.html window
+// Optional settings window
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ipcMain.on('open-settings', () => {
   if (settingsWindow) {
@@ -136,23 +201,22 @@ ipcMain.on('open-settings', () => {
     return;
   }
   settingsWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
+    width: 800,
+    height: 600,
     title: 'SwiftHelp Settings',
     backgroundColor: '#fafafa',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
-    }
+    },
+    autoHideMenuBar: true
   });
-
   settingsWindow.loadFile('settings.html');
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   });
 });
 
-// Provide app settings to settings.html
 ipcMain.handle('get-app-settings', async () => {
   const settingsPath = path.join(__dirname, 'settings.json');
   let currentSettings = {
@@ -160,18 +224,15 @@ ipcMain.handle('get-app-settings', async () => {
     recentFiles: [],
     autoSave: false,
     pinnedSidebar: false,
-    lightMode: false // or other fields
+    lightMode: false
   };
   try {
     const raw = fs.readFileSync(settingsPath, 'utf-8');
     currentSettings = JSON.parse(raw);
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { /* ignore */ }
   return currentSettings;
 });
 
-// Save updated settings from settings.html
 ipcMain.on('save-app-settings', (event, updated) => {
   const settingsPath = path.join(__dirname, 'settings.json');
   let currentSettings = {
@@ -184,22 +245,17 @@ ipcMain.on('save-app-settings', (event, updated) => {
   try {
     const raw = fs.readFileSync(settingsPath, 'utf-8');
     currentSettings = JSON.parse(raw);
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { /* ignore */ }
   const merged = { ...currentSettings, ...updated };
   fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf-8');
   console.log('[Main] Updated app settings =>', merged);
-
-  // Optionally, broadcast to mainWindow
-  // mainWindow.webContents.send('settings-updated', merged);
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Settings load/save used by the main editor
+// The older load/save settings approach
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ipcMain.handle('load-settings', async () => {
-  console.log('[Main] load-settings invoked (legacy approach)');
+  console.log('[Main] load-settings invoked');
   const settingsPath = path.join(__dirname, 'settings.json');
   let parsed = {
     sidebarWidth: 300,
@@ -220,7 +276,6 @@ ipcMain.handle('load-settings', async () => {
 ipcMain.on('save-settings', (event, newSettings) => {
   console.log('[Main] save-settings =>', newSettings);
   const settingsPath = path.join(__dirname, 'settings.json');
-
   let currentSettings = {
     sidebarWidth: 300,
     recentFiles: [],
@@ -230,15 +285,20 @@ ipcMain.on('save-settings', (event, newSettings) => {
   try {
     const raw = fs.readFileSync(settingsPath, 'utf-8');
     currentSettings = JSON.parse(raw);
-  } catch (e) {
-    // If no existing file
-  }
+  } catch (e) {}
   const updated = { ...currentSettings, ...newSettings };
   fs.writeFileSync(settingsPath, JSON.stringify(updated, null, 2), 'utf-8');
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Open/Save Logic for multi-sections or single-file
+// Listen for the renderer's "update-is-dirty"
+ipcMain.on('update-is-dirty', (event, newDirtyState) => {
+  globalIsDirty = newDirtyState;
+  console.log('[Main] globalIsDirty updated =>', globalIsDirty);
+});
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Open / Save logic
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ipcMain.on('open-file-dialog', async (event) => {
   console.log('[Main] open-file-dialog triggered');
@@ -312,14 +372,20 @@ ipcMain.on('save-file-dialog', async (event, payload) => {
 });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Export to HTML (with optional docTitle from payload)
+// Export to HTML
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ipcMain.on('export-html', async (event, payload) => {
-  // payload can be either just sections or { sections, docTitle }
-  const sectionsData = Array.isArray(payload) ? payload : payload.sections;
-  const userDocTitle = (Array.isArray(payload) ? null : payload.docTitle) || '';
+  let sectionsData = [];
+  let userDocTitle = '';
 
-  console.log('[Main] export-html triggered');
+  if (Array.isArray(payload)) {
+    sectionsData = payload; // old approach, no docTitle
+  } else if (payload && typeof payload === 'object') {
+    sectionsData = payload.sectionsData || [];
+    userDocTitle = payload.docTitle || '';
+  }
+  console.log('[Main] export-html triggered, docTitle=', userDocTitle);
+
   const { canceled, filePath } = await dialog.showSaveDialog({
     filters: [{ name: 'HTML', extensions: ['html'] }]
   });
@@ -345,21 +411,21 @@ ipcMain.on('export-html', async (event, payload) => {
 ipcMain.on('preview-in-browser', (event, sectionsData) => {
   previewInBrowser(sectionsData);
 });
-
 async function previewInBrowser(sectionsData) {
   try {
-    const finalHtml = buildEnhancedDarkHtml(sectionsData);
+    console.log('[Main] previewInBrowser => building HTML for preview...');
+    const finalHtml = buildEnhancedDarkHtml(sectionsData, 'SwiftHelp Preview');
     const tmpFile = path.join(os.tmpdir(), `swifthelp-preview-${Date.now()}.html`);
     fs.writeFileSync(tmpFile, finalHtml, 'utf8');
+    console.log('[Main] Opening preview =>', tmpFile);
     await shell.openExternal('file://' + tmpFile);
-    console.log('[Main] Preview launched in browser =>', tmpFile);
   } catch (err) {
     console.error('[Main] previewInBrowser error:', err);
   }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Build the final HTML from sectionsData + optional docTitle
+// Build final HTML with docTitle => replaced in Dark-Template.html
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function buildEnhancedDarkHtml(sectionsData, docTitle = '') {
   marked.setOptions({ mangle: false, headerIds: false });
@@ -372,11 +438,10 @@ function buildEnhancedDarkHtml(sectionsData, docTitle = '') {
     .map(sec => `<li class="section-item">${sec.title}</li>`)
     .join('\n');
 
-  // read Dark-Template.html
   const templatePath = path.join(__dirname, 'templates', 'Dark-Template.html');
   let templateString = fs.readFileSync(templatePath, 'utf-8');
 
-  // dynamic block for prev/home/next/print/toggle mode
+  // Build dynamic JS to load sections, etc.
   const dynamicJsBlock = `
     const sections = ${JSON.stringify(renderedSections, null, 2)};
     let currentIndex = 0;
@@ -436,26 +501,25 @@ function buildEnhancedDarkHtml(sectionsData, docTitle = '') {
     });
   `;
 
-  // If user passed docTitle, use it; otherwise default
   const usedDocTitle = docTitle.trim() || 'SwiftHelp Export';
   const initialTitle = renderedSections.length ? renderedSections[0].title : 'Untitled';
-  const initialHtml = renderedSections.length ? renderedSections[0].html : '<p>No content</p>';
+  const initialHtml  = renderedSections.length ? renderedSections[0].html   : '<p>No content</p>';
 
-  // Replace placeholders
   templateString = templateString
-    .replace('{{ docTitle }}', usedDocTitle)
-    .replace('{{ initial_section_title }}', initialTitle)
-    .replace('{{ initial_content }}', initialHtml)
-    .replace('{{ sidebar_content }}', sidebarHtml)
-    .replace('{{ dynamic_js_block }}', dynamicJsBlock);
+    .replace(/{{ docTitle }}/g, usedDocTitle)
+    .replace(/{{ initial_section_title }}/g, initialTitle)
+    .replace(/{{ initial_content }}/g, initialHtml)
+    .replace(/{{ sidebar_content }}/g, sidebarHtml)
+    .replace(/{{ dynamic_js_block }}/g, dynamicJsBlock);
 
+  console.log('[Main] buildEnhancedDarkHtml => docTitle replaced =>', usedDocTitle);
   return templateString;
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Export to PDF (placeholder logic)
+// PDF placeholder
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ipcMain.on('menu-export-pdf', async () => {
   console.log('[Main] Export to PDF triggered');
-  // For future PDF logic
+  // placeholder logic or PDF generation can go here
 });

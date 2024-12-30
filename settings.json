@@ -1,7 +1,13 @@
 {
-  "sidebarWidth": 292,
+  "sidebarWidth": 265,
   "recentFiles": [],
   "autoSave": false,
   "pinnedSidebar": false,
-  "lightMode": true
+  "lightMode": true,
+  "devMode": false,
+  "checkUpdates": false,
+  "disableAnimations": false,
+  "spellCheckLang": "en-US",
+  "enableSpellcheck": false,
+  "betaChannel": "none"
 }

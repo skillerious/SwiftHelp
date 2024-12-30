@@ -263,6 +263,40 @@
     #recent-files-list li:hover {
       background-color: #444;
     }
+
+    /* Export Title Overlay => user can set docTitle for "Export to HTML" */
+    #export-title-overlay {
+      position: fixed;
+      inset: 0;
+      display: none; /* hidden by default, toggled in JS */
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      z-index: 10000;
+    }
+    #export-title-content {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      padding: 16px;
+      border-radius: 6px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 320px;
+    }
+    #export-title-content input[type="text"] {
+      background: #333;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 4px;
+      padding: 6px 8px;
+    }
+    #export-title-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
@@ -419,6 +453,18 @@
       <h2>Recent Files</h2>
       <ul id="recent-files-list"></ul>
       <button id="close-recent">Close</button>
+    </div>
+  </div>
+
+  <!-- Export Title Overlay => user can enter a custom docTitle for HTML export -->
+  <div id="export-title-overlay">
+    <div id="export-title-content">
+      <h2>Export HTML Title</h2>
+      <input type="text" id="txt-export-title" placeholder="Enter Document Title" />
+      <div id="export-title-buttons">
+        <button id="export-title-apply">OK</button>
+        <button id="export-title-cancel">Cancel</button>
+      </div>
     </div>
   </div>
 
