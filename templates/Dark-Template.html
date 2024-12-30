@@ -3,13 +3,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>{{ title }}</title>
+  <title>{{ docTitle }}</title>
   
   <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
   
   <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
   
   <!-- Custom Styles -->
   <style>
@@ -20,11 +26,22 @@
       color: #fff;
       margin: 0;
       padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
     }
 
     body.light-mode {
       background-color: #ffffff;
       color: #000000;
+    }
+
+    /* Smooth fade on background changes */
+    body,
+    body.light-mode {
+      -webkit-transition: background-color 0.3s, color 0.3s;
+      -moz-transition: background-color 0.3s, color 0.3s;
+      -o-transition: background-color 0.3s, color 0.3s;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     /* Navbar Styles */
@@ -35,7 +52,8 @@
       width: 100%;
     }
     
-    .navbar-left, .navbar-right {
+    .navbar-left,
+    .navbar-right {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -68,18 +86,22 @@
       background-color: #007bff;
       color: #fff;
       border: none;
-      border-radius: 5px; /* Rounded Buttons */
+      border-radius: 5px;
+      transition: background-color 0.15s;
+    }
+    .btn-accent:hover {
+      background-color: #0056b3;
     }
     
     .navbar-toggler.btn-accent {
       background-color: #007bff;
       border: none;
-      border-radius: 5px; /* Rounded Buttons */
+      border-radius: 5px;
     }
     
     /* Navbar Background */
     #mainNavbar {
-      background-color: #1e1e1e !important; /* Dark background */
+      background-color: #1e1e1e !important;
     }
     
     /* Navbar Text and Icons */
@@ -96,6 +118,7 @@
     .offcanvas-sidebar {
       background-color: #1e1e1e;
       color: #ffffff;
+      transition: background-color 0.3s, color 0.3s;
     }
     body.light-mode .offcanvas-sidebar {
       background-color: #f8f9fa;
@@ -107,7 +130,17 @@
       padding: 0;
       margin: 0;
     }
-    
+
+    /* Slight fade in for sections list */
+    .sections-list li {
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     /* Category Items */
     .category-item {
       padding: 0.75rem 1rem;
@@ -180,13 +213,13 @@
     .subcategory-list {
       list-style: none;
       padding-left: 0;
-      display: none; /* Hidden by default if using your own collapse logic */
+      display: none;
     }
     
     .section-list {
       list-style: none;
       padding-left: 0;
-      display: none; /* Hidden by default */
+      display: none;
     }
     
     /* Markdown Content Styles */
@@ -195,7 +228,7 @@
       background-color: #181818;
       height: calc(100vh - 56px);
       overflow-y: auto;
-      color: #f0f0f0; /* Ensure text color inside help-content */
+      color: #f0f0f0;
       transition: background-color 0.3s, color 0.3s;
     }
     body.light-mode #help-content {
@@ -203,16 +236,17 @@
       color: #000000;
     }
     
-    /* Link Styling within help-content */
+    /* Link Styling */
     #help-content a {
       color: #66aaff;
       text-decoration: underline;
+      transition: color 0.15s;
     }
     #help-content a:hover {
       color: #5599ff;
     }
     
-    /* Enhanced Code Blocks within help-content */
+    /* Code Blocks */
     #help-content pre {
       background-color: #2d2d2d;
       border-left: 5px solid #28a745;
@@ -232,7 +266,7 @@
       font-size: 0.95em;
     }
     
-    /* Enhanced Blockquotes within help-content */
+    /* Blockquotes */
     #help-content blockquote {
       border-left: 5px solid #ffc107;
       background-color: #2a2a2a;
@@ -247,54 +281,95 @@
       color: #856404;
     }
     
-    /* Enhanced Tables within help-content */
+    /* Tables: Make them look a bit more "modern" */
     #help-content table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate; /* separate borders so we can do better rounding */
+      border-spacing: 0;
       margin: 1rem 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      border-radius: 6px; /* used with overflow to have rounded corners */
+      overflow: hidden;   /* the corners will be rounded */
+      animation: fadeIn 0.4s ease-in;
     }
-    #help-content th, #help-content td {
-      border: 1px solid #555;
-      padding: 0.5rem;
-      text-align: left;
+
+    #help-content thead tr {
+      background-color: #343a40;
     }
+    body.light-mode #help-content thead tr {
+      background-color: #007bff; 
+      color: #fff;
+    }
+
     #help-content th {
+      padding: 0.75rem;
       background-color: #343a40;
       color: #fff;
+      font-weight: 600;
+      border: none;
     }
     body.light-mode #help-content th {
       background-color: #007bff;
       color: #fff;
     }
-    #help-content tr:nth-child(even) {
+
+    #help-content tbody tr {
       background-color: #2d2d2d;
+      transition: background-color 0.2s;
     }
-    body.light-mode #help-content tr:nth-child(even) {
+    body.light-mode #help-content tbody tr {
+      background-color: #fff;
+    }
+
+    #help-content tbody tr:nth-child(even) {
+      background-color: #252525;
+    }
+    body.light-mode #help-content tbody tr:nth-child(even) {
       background-color: #f2f2f2;
     }
+
+    #help-content td {
+      padding: 0.75rem;
+      border: none;
+    }
+
+    #help-content tbody tr:hover {
+      background-color: #3b3b3b;
+    }
+    body.light-mode #help-content tbody tr:hover {
+      background-color: #d2d2d2;
+    }
     
-    /* Additional Enhancements for Headings within help-content */
-    #help-content h1, #help-content h2, #help-content h3, #help-content h4, #help-content h5, #help-content h6 {
+    /* Headings */
+    #help-content h1,
+    #help-content h2,
+    #help-content h3,
+    #help-content h4,
+    #help-content h5,
+    #help-content h6 {
       border-bottom: 2px solid #007bff;
       padding-bottom: 0.3em;
       margin-top: 1.5em;
+      margin-bottom: 1em;
       border-radius: 5px;
+      transition: border-bottom-color 0.3s;
     }
-    body.light-mode #help-content h1, 
-    body.light-mode #help-content h2, 
-    body.light-mode #help-content h3, 
-    body.light-mode #help-content h4, 
-    body.light-mode #help-content h5, 
+    body.light-mode #help-content h1,
+    body.light-mode #help-content h2,
+    body.light-mode #help-content h3,
+    body.light-mode #help-content h4,
+    body.light-mode #help-content h5,
     body.light-mode #help-content h6 {
       border-bottom: 2px solid #007bff;
     }
     
-    /* General Markdown Styling within help-content */
+    /* Paragraphs */
     #help-content p {
       line-height: 1.6;
       margin: 1rem 0;
     }
-    #help-content ul, #help-content ol {
+    #help-content ul,
+    #help-content ol {
       margin: 1rem 0;
       padding-left: 2rem;
     }
@@ -302,26 +377,31 @@
       max-width: 100%;
       height: auto;
       border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    #help-content img:hover {
+      transform: scale(1.02);
     }
     
-    /* Highlighting within help-content */
+    /* Highlighting */
     .highlight {
-      background-color: yellow; 
-      color: #000; 
+      background-color: yellow;
+      color: #000;
       font-weight: bold;
     }
     
-    /* Inline Code Styling within help-content */
+    /* Inline Code */
     #help-content code {
-      background-color: #222; 
-      padding: 2px 4px; 
+      background-color: #222;
+      padding: 2px 4px;
       border-radius: 3px;
     }
     body.light-mode #help-content code {
-      background-color: #f5f5f5; 
-      color: #d63384; /* Bootstrap's pink */
+      background-color: #f5f5f5;
+      color: #d63384;
     }
-    
+
     /* Scrollbar Styling */
     #sections-list::-webkit-scrollbar {
       width: 8px;
@@ -339,6 +419,21 @@
     body.light-mode #sections-list::-webkit-scrollbar-thumb {
       background-color: #ccc;
     }
+
+    /* Subtle fade/slide for the help-content transitions */
+    #help-content {
+      animation: fadeSlideIn 0.3s ease-out;
+    }
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -347,14 +442,26 @@
     <div class="navbar-container w-100">
       <!-- Left: hamburger + 'Help Docs' -->
       <div class="navbar-left">
-        <button class="navbar-toggler btn-accent me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-label="Toggle navigation">
+        <button
+          class="navbar-toggler btn-accent me-2"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#offcanvasSidebar"
+          aria-controls="offcanvasSidebar"
+          aria-label="Toggle navigation"
+        >
           <i class="bi bi-list"></i>
         </button>
         <span class="navbar-brand mb-0 title-brand">Help Docs</span>
       </div>
       <!-- Center: current section title -->
       <div class="navbar-center">
-        <span id="currentSectionTitle" class="navbar-brand mb-0 title-brand">{{ initial_section_title }}</span>
+        <span
+          id="currentSectionTitle"
+          class="navbar-brand mb-0 title-brand"
+        >
+          {{ initial_section_title }}
+        </span>
       </div>
       <!-- Right: next/prev/home, print, toggle -->
       <div class="navbar-right">
@@ -378,18 +485,38 @@
   </nav>
 
   <!-- Offcanvas Sidebar -->
-  <div class="offcanvas offcanvas-start text-light offcanvas-sidebar" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
+  <div
+    class="offcanvas offcanvas-start text-light offcanvas-sidebar"
+    tabindex="-1"
+    id="offcanvasSidebar"
+    aria-labelledby="offcanvasSidebarLabel"
+  >
     <div class="offcanvas-header border-bottom">
       <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Sections</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <button
+        type="button"
+        class="btn-close btn-close-white"
+        data-bs-dismiss="offcanvas"
+        aria-label="Close"
+      ></button>
     </div>
     <div class="offcanvas-body">
       <ul id="sections-list" class="sections-list">
         {{ sidebar_content }}
       </ul>
       <div class="input-group mb-3 mt-4">
-        <input type="text" class="form-control form-control-dark" id="search-input" placeholder="Search..."/>
-        <button class="btn btn-accent" type="button" id="searchBtn" aria-label="Search">
+        <input
+          type="text"
+          class="form-control form-control-dark"
+          id="search-input"
+          placeholder="Search..."
+        />
+        <button
+          class="btn btn-accent"
+          type="button"
+          id="searchBtn"
+          aria-label="Search"
+        >
           <i class="bi bi-search"></i>
         </button>
       </div>
@@ -401,12 +528,14 @@
     {{ initial_content }}
   </div>
 
-  <!-- JavaScript for Interactivity -->
+  <!-- Injected dynamic JS block from main.js -->
   <script>
     {{ dynamic_js_block }}
   </script>
 
   <!-- Bootstrap 5 Bundle JS (includes Popper) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+  </script>
 </body>
 </html>
