@@ -1,10 +1,4 @@
-/********************************************************************
- * main.js
- * Electron's main process: includes:
- *  - globalIsDirty to track unsaved changes
- *  - mainWindow.on('close', ...) => prompts user if unsaved
- *  - plus existing logic for open/save/export, etc.
- ********************************************************************/
+
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');

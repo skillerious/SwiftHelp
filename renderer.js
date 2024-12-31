@@ -610,6 +610,7 @@ ipcRenderer.on('save-file-result', (event, data) => {
   }
 });
 
+
 // New project => check unsaved
 btnNew?.addEventListener('click', () => {
   if (!confirmUnsavedChanges()) {
