@@ -1,7 +1,6 @@
-
 # SwiftHelp
 
-SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Skillerious**](https://github.com/Skillerious). It enables you to write and organize documentation in multiple sections, edit in Markdown, preview changes in real time, and export to HTML or PDF—complete with features like **syntax highlighting**, **auto-save**, **recent files**, **pinned sidebars**, **draggable sections**, and a **context menu** to rename/duplicate/delete sections seamlessly.
+SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Skillerious**](https://github.com/skillerious). It enables you to write and organize documentation in multiple sections, edit in Markdown, preview changes in real time, and export to HTML or PDF—complete with features like **syntax highlighting**, **auto-save**, **recent files**, **pinned sidebars**, **draggable sections**, and a **context menu** to rename/duplicate/delete sections seamlessly.
 
 ---
 
@@ -70,6 +69,12 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 - **Scroll Sync**  
   Editor and Preview panels remain in sync while scrolling—jump directly to the corresponding preview location as you scroll in the editor, and vice versa.
 
+- **Customizable Toolbar**  
+  Add or remove toolbar buttons to match your workflow and access frequently used features quickly.
+
+- **Advanced Export Settings**  
+  Customize your export with themes, headers, footers, and selective content inclusion.
+
 ---
 
 ## Screenshots
@@ -103,7 +108,7 @@ SwiftHelp is a versatile **Electron-based help-authoring tool** created by [**Sk
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Skillerious/SwiftHelp.git
+   git clone https://github.com/skillerious/SwiftHelp.git
    cd SwiftHelp
    ```
 2. **Install dependencies**:
@@ -249,22 +254,19 @@ We welcome bug fixes, new features, and updates to documentation.
 
 ## License
 
-*(Assuming MIT, or whichever you prefer)*
-
 ```
 MIT License
 
 Copyright (c) 2023 Skillerious
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-...
-```
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
----
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-## Contact
-
-- **Author**: [Skillerious](https://github.com/Skillerious)  
-- **Repository**: [SwiftHelp on GitHub](https://github.com/Skillerious/SwiftHelp)
-
-For questions or feedback, open a GitHub issue or drop me a message. Enjoy writing your docs with **SwiftHelp**!
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
