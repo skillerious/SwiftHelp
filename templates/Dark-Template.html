@@ -1,4 +1,3 @@
-<!-- Dark-Template.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +41,38 @@
       -moz-transition: background-color 0.3s, color 0.3s;
       -o-transition: background-color 0.3s, color 0.3s;
       transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #17171800;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #505050;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #007bff;
+    }
+
+    /* Scrollbar Styling for Light Mode */
+    body.light-mode ::-webkit-scrollbar-track {
+      background: #f8f9fa;
+    }
+
+    body.light-mode ::-webkit-scrollbar-thumb {
+      background: #aaa;
+    }
+
+    body.light-mode ::-webkit-scrollbar-thumb:hover {
+      background: #0056b3;
     }
 
     /* Navbar Styles */
@@ -414,10 +445,10 @@
       border-radius: 4px;
     }
     body.light-mode #sections-list::-webkit-scrollbar-track {
-      background: #f8f9fa;
+      background: #17171800;
     }
     body.light-mode #sections-list::-webkit-scrollbar-thumb {
-      background-color: #ccc;
+      background-color: #17171800;
     }
 
     /* Subtle fade/slide for the help-content transitions */
@@ -452,7 +483,7 @@
         >
           <i class="bi bi-list"></i>
         </button>
-        <span class="navbar-brand mb-0 title-brand">Help Docs</span>
+        <span class="navbar-brand mb-0 title-brand">SwiftHelp</span>
       </div>
       <!-- Center: current section title -->
       <div class="navbar-center">
@@ -484,58 +515,55 @@
     </div>
   </nav>
 
-  <!-- Offcanvas Sidebar -->
   <div
-    class="offcanvas offcanvas-start text-light offcanvas-sidebar"
-    tabindex="-1"
-    id="offcanvasSidebar"
-    aria-labelledby="offcanvasSidebarLabel"
-  >
-    <div class="offcanvas-header border-bottom">
-      <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Sections</h5>
+  class="offcanvas offcanvas-start text-light offcanvas-sidebar"
+  tabindex="-1"
+  id="offcanvasSidebar"
+  aria-labelledby="offcanvasSidebarLabel"
+>
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Sections</h5>
+    <button
+      type="button"
+      class="btn-close btn-close-white"
+      data-bs-dismiss="offcanvas"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul id="sections-list" class="sections-list">
+      {{ sidebar_content }}
+    </ul>
+    <div class="input-group mb-3 mt-4">
+      <input
+        type="text"
+        class="form-control form-control-dark"
+        id="search-input"
+        placeholder="Search..."
+      />
       <button
+        class="btn btn-accent"
         type="button"
-        class="btn-close btn-close-white"
-        data-bs-dismiss="offcanvas"
-        aria-label="Close"
-      ></button>
-    </div>
-    <div class="offcanvas-body">
-      <ul id="sections-list" class="sections-list">
-        {{ sidebar_content }}
-      </ul>
-      <div class="input-group mb-3 mt-4">
-        <input
-          type="text"
-          class="form-control form-control-dark"
-          id="search-input"
-          placeholder="Search..."
-        />
-        <button
-          class="btn btn-accent"
-          type="button"
-          id="searchBtn"
-          aria-label="Search"
-        >
-          <i class="bi bi-search"></i>
-        </button>
-      </div>
+        id="searchBtn"
+        aria-label="Search"
+      >
+        <i class="bi bi-search"></i>
+      </button>
     </div>
   </div>
+</div>
 
-  <!-- Markdown Content -->
-  <div id="help-content">
-    {{ initial_content }}
-  </div>
+<!-- Markdown Content -->
+<div id="help-content">
+  {{ initial_content }}
+</div>
 
-  <!-- Injected dynamic JS block from main.js -->
-  <script>
-    {{ dynamic_js_block }}
-  </script>
+<!-- Injected dynamic JS block from main.js -->
+<script>
+  {{ dynamic_js_block }}
+</script>
 
-  <!-- Bootstrap 5 Bundle JS (includes Popper) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-  </script>
-</body>
-</html>
+<!-- Bootstrap 5 Bundle JS (includes Popper) -->
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+</script>
